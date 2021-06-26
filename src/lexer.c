@@ -41,6 +41,7 @@ static char next(void)
     if (!l->done && !l->input[l->pos]) {
 	load_line();
     }
+
     if (!l->input[l->pos]) {
 	return '\0';
     }
@@ -64,11 +65,11 @@ static struct Token *emit(Type type)
     strncpy(text, l->input + l->start, n);
     text[n] = '\0';
 
+    l->start = l->pos;
+
     struct Token *t = malloc(sizeof(struct Token));
     t->text = text;
     t->type = type;
-
-    l->start = l->pos;
     return t;
 }
 
@@ -79,34 +80,64 @@ static struct Token *lexAnd(void)
 
 static struct Token *lexNumber(void)
 {
-    return emit(TIONumber);
+    for (;;) {
+	switch (next()) {
+
+	default:
+	    return emit(TIONumber);
+
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+	    break;
+	}
+    }
 }
 
 static struct Token *lexLess(void)
 {
     switch (peek()) {
-    case '<':			// <<
+
+	// <
+    default:
+	return emit(TLess);
+
+	// <<
+    case '<':
 	next();
 	return emit(TDLess);
-    case '&':			// <&
+
+	// <&
+    case '&':
 	next();
 	return emit(TLessAnd);
-    default:			// <
-	return emit(TLess);
     }
 }
 
 static struct Token *lexGreat(void)
 {
     switch (peek()) {
-    case '>':			// >>
+
+	// >
+    default:
+	return emit(TGreat);
+
+	// >>
+    case '>':
 	next();
 	return emit(TDGreat);
-    case '&':			// >&
+
+	// >&
+    case '&':
 	next();
 	return emit(TGreatAnd);
-    default:			// >
-	return emit(TGreat);
     }
 }
 
