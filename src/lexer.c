@@ -5,45 +5,29 @@
 
 #include "lexer.h"
 
-#define MAX_LINE_LENGTH 8
+Lex *l = NULL;
 
-struct Lexer {
-    char input[MAX_LINE_LENGTH];
-    FILE *src;			// Source file to extract input from. 
-    int pos;			// Current position in input.
-    int start;			// Start position of current token.
-    bool done;			// If true, there is no more to read from.
-};
-
-static struct Lexer *l = NULL;
-
-void lexer_new(FILE * src)
+Lex *lex_make(void)
 {
-    l = malloc(sizeof(struct Lexer));
-    l->src = src;
+    l = malloc(sizeof(Lex));
+    l->pos = 0;
+    l->start = 0;
+    l->done = false;
+    return l;
+}
+
+void lex_readfrom(const char *input)
+{
+    l->input = input;
     l->pos = 0;
     l->start = 0;
     l->done = false;
 }
 
-static void load_line(void)
-{
-    if (!fgets(l->input, MAX_LINE_LENGTH, l->src)) {
-	l->done = true;
-    }
-
-    l->pos = 0;
-    l->start = 0;
-}
-
 static char next(void)
 {
-    if (!l->done && !l->input[l->pos]) {
-	load_line();
-    }
-
     if (!l->input[l->pos]) {
-	return '\0';
+	l->done = true;
     }
 
     char c = l->input[l->pos];
@@ -58,30 +42,42 @@ static char peek(void)
     return c;
 }
 
-static struct Token *emit(Type type)
+static Token *emit(Type type)
 {
-    int n = l->pos - l->start;
-    char text[n + 1];
-    strncpy(text, l->input + l->start, n);
-    text[n] = '\0';
-
-    l->start = l->pos;
-
-    struct Token *t = malloc(sizeof(struct Token));
-    t->text = text;
+    Token *t = malloc(sizeof(Token));
     t->type = type;
+
+    int n = l->pos - l->start;
+    t->text = malloc(sizeof(char) * (n + 1));
+    t->text[n] = '\0';
+
+    strncpy(t->text, l->input + l->start, n);
+    l->start = l->pos;
     return t;
 }
 
-static struct Token *lexAnd(void)
+static void ignore(void)
 {
-    return emit(TAnd);
+    l->start = l->pos;
 }
 
-static struct Token *lexNumber(void)
+static bool is_space(const char c)
+{
+    return c == ' ' || c == '\n' || c == '\t';
+}
+
+static void lex_space(void)
+{
+    if (is_space(peek())) {
+	next();
+    }
+    ignore();
+}
+
+static Token *lex_number(void)
 {
     for (;;) {
-	switch (next()) {
+	switch (peek()) {
 
 	default:
 	    return emit(TIONumber);
@@ -96,12 +92,13 @@ static struct Token *lexNumber(void)
 	case '7':
 	case '8':
 	case '9':
+	    next();
 	    break;
 	}
     }
 }
 
-static struct Token *lexLess(void)
+static Token *lex_less(void)
 {
     switch (peek()) {
 
@@ -121,7 +118,7 @@ static struct Token *lexLess(void)
     }
 }
 
-static struct Token *lexGreat(void)
+static Token *lex_great(void)
 {
     switch (peek()) {
 
@@ -141,7 +138,7 @@ static struct Token *lexGreat(void)
     }
 }
 
-struct Token *lexer_next(void)
+Token *lex_next(void)
 {
     for (;;) {
 	switch (next()) {
@@ -153,13 +150,13 @@ struct Token *lexer_next(void)
 	    return emit(TEOF);
 
 	case '&':
-	    return lexAnd();
+	    return emit(TAnd);
 
 	case '<':
-	    return lexLess();
+	    return lex_less();
 
 	case '>':
-	    return lexGreat();
+	    return lex_great();
 
 	case '0':
 	case '1':
@@ -171,9 +168,12 @@ struct Token *lexer_next(void)
 	case '7':
 	case '8':
 	case '9':
-	    return lexNumber();
+	    return lex_number();
 
+	case ' ':
 	case '\n':
+	case '\t':
+	    lex_space();
 	    break;
 	}
     }
