@@ -1,12 +1,19 @@
+//
+// lex.c - lexical analysis
+//
+
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "lexer.h"
+#include "lex.h"
 
 static Lex *l;
 
+// lex_make allocate and returns a Lex struct. Its field are just read-only,
+// make sure not setting any of its fields.  lex_make has to be called before
+// using the rest of public functions listen in "lex.h".
 Lex *lex_make(void)
 {
     l = malloc(sizeof(Lex));
@@ -16,6 +23,8 @@ Lex *lex_make(void)
     return l;
 }
 
+// lex_readfrom sets Lex->input to points to the new input provided by the
+// caller and resets Lex->pos, Lex->start, and Lex->done to its zero values.
 void lex_readfrom(const char *input)
 {
     l->input = input;
@@ -24,6 +33,7 @@ void lex_readfrom(const char *input)
     l->done = false;
 }
 
+// next returns the next character in the input.
 static char next(void)
 {
     if (!l->input[l->pos]) {
@@ -35,6 +45,7 @@ static char next(void)
     return c;
 }
 
+// peek returns but does not consume the next character in the input.
 static char peek(void)
 {
     char c = next();
@@ -42,6 +53,7 @@ static char peek(void)
     return c;
 }
 
+// emit returns a token back to the caller.
 static Token *emit(Type type)
 {
     Token *t = malloc(sizeof(Token));
@@ -56,16 +68,20 @@ static Token *emit(Type type)
     return t;
 }
 
+// ignore skips over the pending input before this point.
 static void ignore(void)
 {
     l->start = l->pos;
 }
 
+// is_space reports whether c is a space character.
 static bool is_space(const char c)
 {
     return c == ' ' || c == '\n' || c == '\t';
 }
 
+// lex_space consume the is_space characteres. lex_space is supposed to be
+// called when one space has already been seen.
 static void lex_space(void)
 {
     while (is_space(peek())) {
@@ -74,6 +90,7 @@ static void lex_space(void)
     ignore();
 }
 
+// lex_number scans an integer positive number.
 static Token *lex_number(void)
 {
     for (;;) {
@@ -98,6 +115,7 @@ static Token *lex_number(void)
     }
 }
 
+// lex_less scans a TLess, TDLess or TLessAnd.
 static Token *lex_less(void)
 {
     switch (peek()) {
@@ -118,6 +136,7 @@ static Token *lex_less(void)
     }
 }
 
+// lex_less scans a TGreat, TDGreat or TGreatAnd.
 static Token *lex_great(void)
 {
     switch (peek()) {
@@ -138,6 +157,7 @@ static Token *lex_great(void)
     }
 }
 
+// lex_next returns the next token available in input.
 Token *lex_next(void)
 {
     for (;;) {
@@ -147,6 +167,9 @@ Token *lex_next(void)
 	    return emit(TUNK);
 
 	case '\0':
+// The null-terminated character has already been reached from the input, which
+				// means, there is no more input to read from
+				// until lex_readfrom get called.
 	    return emit(TEOF);
 
 	case '&':
