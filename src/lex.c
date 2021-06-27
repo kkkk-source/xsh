@@ -26,7 +26,7 @@ static bool is_space(const char);
 
 static Lex *l;
 
-// lex_make allocate and returns a Lex struct. Its field are just read-only,
+// lex_make allocates and returns a Lex struct. Its field are just read-only,
 // make sure not setting any of its fields.  lex_make has to be called before
 // using the rest of public functions listen in "lex.h".
 Lex *lex_make(void)
@@ -38,8 +38,8 @@ Lex *lex_make(void)
     return l;
 }
 
-// lex_readfrom sets Lex->input to points to the new input provided by the
-// caller and resets Lex->pos, Lex->start, and Lex->done to its zero values.
+// lex_readfrom sets Lex->input to point to the new input provided by the
+// caller and reset Lex->pos, Lex->start, and Lex->done to its zero values.
 void lex_readfrom(const char *input)
 {
     l->input = input;
@@ -60,7 +60,7 @@ Token *lex_next(void)
 	case '\0':
 	    // The null-terminated character has already been reached from the
 	    // input, which means, there is no more input to
-	    // read from / until lex_readfrom get called.
+	    // read from until lex_readfrom get called.
 	    return emit(TEOF);
 
 	case '&':
@@ -201,7 +201,7 @@ static Token *lex_great(void)
     }
 }
 
-// lex_space consume the is_space characteres. lex_space is supposed to be
+// lex_space consumes the space characteres. lex_space is supposed to be called
 // when one space has already been seen.
 static void lex_space(void)
 {

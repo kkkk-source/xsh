@@ -8,9 +8,7 @@
 typedef enum {
     TEOF,			// End Of File
     TUNK,			// Unknown
-
-    TIONumber,
-
+    TIONumber,			// Integer positive number
     TAnd,			// &
     TLess,			// <
     TGreat,			// >
@@ -22,7 +20,7 @@ typedef enum {
 
 // Lex holds the state of the lexer.
 typedef struct __sLex {
-    const char *input;
+    const char *input;		// A read-only input to analyze.
     int pos;			// Current position in the provided input.
     int start;			// Start position of current token's c-string.
     bool done;			// If true, the current input has been consume.
