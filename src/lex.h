@@ -6,8 +6,8 @@
 #include <stdbool.h>
 
 typedef enum {
-    TEOF, // End Of File
-    TUNK, // Unknown
+    TEOF,			// End Of File
+    TUNK,			// Unknown
 
     TIONumber,
 
