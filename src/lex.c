@@ -9,6 +9,21 @@
 
 #include "lex.h"
 
+Lex *lex_make(void);
+void lex_readfrom(const char *);
+Token *lex_next(void);
+static char next(void);
+static char peek(void);
+static void ignore(void);
+static Token *emit(Type);
+static Token *lex_number(void);
+static Token *lex_less(void);
+static Token *lex_great(void);
+static void lex_space(void);
+static bool is_space(const char);
+
+// ---------------------------------------------------------------------------
+
 static Lex *l;
 
 // lex_make allocate and returns a Lex struct. Its field are just read-only,
@@ -33,6 +48,51 @@ void lex_readfrom(const char *input)
     l->done = false;
 }
 
+// lex_next returns the next token available in input.
+Token *lex_next(void)
+{
+    for (;;) {
+	switch (next()) {
+
+	default:
+	    return emit(TUNK);
+
+	case '\0':
+	    // The null-terminated character has already been reached from the
+	    // input, which means, there is no more input to
+	    // read from / until lex_readfrom get called.
+	    return emit(TEOF);
+
+	case '&':
+	    return emit(TAnd);
+
+	case '<':
+	    return lex_less();
+
+	case '>':
+	    return lex_great();
+
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+	    return lex_number();
+
+	case ' ':
+	case '\n':
+	case '\t':
+	    lex_space();
+	    break;
+	}
+    }
+}
+
 // next returns the next character in the input.
 static char next(void)
 {
@@ -53,6 +113,12 @@ static char peek(void)
     return c;
 }
 
+// ignore skips over the pending input before this point.
+static void ignore(void)
+{
+    l->start = l->pos;
+}
+
 // emit returns a token back to the caller.
 static Token *emit(Type type)
 {
@@ -66,28 +132,6 @@ static Token *emit(Type type)
     strncpy(t->text, l->input + l->start, n);
     l->start = l->pos;
     return t;
-}
-
-// ignore skips over the pending input before this point.
-static void ignore(void)
-{
-    l->start = l->pos;
-}
-
-// is_space reports whether c is a space character.
-static bool is_space(const char c)
-{
-    return c == ' ' || c == '\n' || c == '\t';
-}
-
-// lex_space consume the is_space characteres. lex_space is supposed to be
-// called when one space has already been seen.
-static void lex_space(void)
-{
-    while (is_space(peek())) {
-	next();
-    }
-    ignore();
 }
 
 // lex_number scans an integer positive number.
@@ -157,47 +201,18 @@ static Token *lex_great(void)
     }
 }
 
-// lex_next returns the next token available in input.
-Token *lex_next(void)
+// lex_space consume the is_space characteres. lex_space is supposed to be
+// when one space has already been seen.
+static void lex_space(void)
 {
-    for (;;) {
-	switch (next()) {
-
-	default:
-	    return emit(TUNK);
-
-	case '\0':
-// The null-terminated character has already been reached from the input, which
-				// means, there is no more input to read from
-				// until lex_readfrom get called.
-	    return emit(TEOF);
-
-	case '&':
-	    return emit(TAnd);
-
-	case '<':
-	    return lex_less();
-
-	case '>':
-	    return lex_great();
-
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':
-	    return lex_number();
-
-	case ' ':
-	case '\n':
-	case '\t':
-	    lex_space();
-	    break;
-	}
+    while (is_space(peek())) {
+	next();
     }
+    ignore();
+}
+
+// is_space reports whether c is a space character.
+static bool is_space(const char c)
+{
+    return c == ' ' || c == '\n' || c == '\t';
 }
