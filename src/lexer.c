@@ -5,7 +5,7 @@
 
 #include "lexer.h"
 
-Lex *l = NULL;
+static Lex *l;
 
 Lex *lex_make(void)
 {
@@ -31,14 +31,14 @@ static char next(void)
     }
 
     char c = l->input[l->pos];
-    l->pos = l->pos + 1;
+    l->pos++;
     return c;
 }
 
 static char peek(void)
 {
     char c = next();
-    l->pos = l->pos - 1;
+    l->pos--;
     return c;
 }
 
@@ -68,7 +68,7 @@ static bool is_space(const char c)
 
 static void lex_space(void)
 {
-    if (is_space(peek())) {
+    while (is_space(peek())) {
 	next();
     }
     ignore();
