@@ -1,1 +1,0 @@
-gcc -shared -fPIC -o lexer.so ../src/lexer.c
