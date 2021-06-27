@@ -1,5 +1,5 @@
 local ffi = require('ffi')
-local lex = ffi.load('./lexer.so')
+local lex = ffi.load('test/lex.so')
 
 ffi.cdef [[
 
@@ -9,9 +9,7 @@ typedef struct __sLex Lex;
 typedef enum {
     TEOF,
     TUNK,
-    TWord,
     TIONumber,
-    TNewLine,
     TAnd,
     TLess,
     TGreat,
@@ -19,13 +17,11 @@ typedef enum {
     TDGreat,
     TLessAnd,
     TGreatAnd,
-    TLessGreat,
-    TDLessDash,
 } Type;
 
 typedef struct __sToken {
     char * text;
-    Type type;
+    Type   type;
 } Token;
 
 Lex * lex_make(void);
@@ -37,18 +33,14 @@ Token *lex_next(void);
 Type = {
 	TEOF = 0,
 	TUNK = 1,
-	TWord = 2,
-	TIONumber = 3,
-	TNewLine = 4,
-	TAnd = 5,
-	TLess = 6,
-	TGreat = 7,
-	TDLess = 8,
-	TDGreat = 9,
-	TLessAnd = 10,
-	TGreatAnd = 11,
-	TLessGreat = 12,
-	TDLessDash = 13,
+	TIONumber = 2,
+	TAnd = 3,
+	TLess = 4,
+	TGreat = 5,
+	TDLess = 6,
+	TDGreat = 7,
+	TLessAnd = 8,
+	TGreatAnd = 9,
 }
 
 local tests = {
