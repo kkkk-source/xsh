@@ -10,10 +10,12 @@ typedef enum {
     TWord,			// Any
     TIONumber,			// Integer positive number delimited by '<' or '>'
     TNewLine,			// \n
+    TAnd,			// &
+    TOr,			// |
+    TSemi,			// ;
     TAndIf,			// &&
     TOrIf,			// ||
     TDSemi,			// ;;
-    TAnd,			// &
     TLess,			// <
     TGreat,			// >
     TDLess,			// <<

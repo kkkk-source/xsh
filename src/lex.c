@@ -60,14 +60,12 @@ Token *lex_next(void)
 	switch (next()) {
 
 	default:
-	    l->del = false;
 	    return emit(TWord);
 
 	case '\0':
+
 	    // The null-terminated character has already been reached from the
-	    // input, which means, there is no more input to
-	    // read from until lex_readfrom get called.
-	    l->del = false;
+	    // input, which means, there is no more input to read from.
 	    return emit(TEOF);
 
 	case '\n':
@@ -170,6 +168,7 @@ static Token *lex_and(void)
 	next();
 	return emit(TAndIf);
     }
+
     return emit(TAnd);
 }
 
@@ -179,8 +178,8 @@ static Token *lex_or(void)
 	next();
 	return emit(TOrIf);
     }
-    // TODO: What does this should return.
-    return emit(TWord);
+
+    return emit(TOr);
 }
 
 static Token *lex_semi(void)
@@ -189,11 +188,12 @@ static Token *lex_semi(void)
 	next();
 	return emit(TDSemi);
     }
-    // TODO: What does this should return.
-    return emit(TWord);
+
+    return emit(TSemi);
 }
 
-// lex_number scans an integer positive number.
+
+// lex_number scans an integer positive number: Tword  TIONumber.
 static Token *lex_number(void)
 {
     Token *t;
@@ -201,7 +201,20 @@ static Token *lex_number(void)
 	switch (peek()) {
 
 	default:
+
 	    t = emit(TWord);
+
+	    // At this point Lex->stt and Lex->pos are pointing at the start and
+	    // at the end of the current positive integer in the input line:
+	    //
+	    // Lex->input = [ x | x | x | 1 | 2 | x | x | \0 ]
+	    //                            ^       ^
+	    //                            |       |
+	    //                           stt     pos
+	    //
+	    // But we still don't know what type of tokin is it. It could be TWord or
+	    // TIONumber. Consequently, we don't return inmediatly the token; the analysis
+	    // continues.
 	    goto Loop;
 
 	case '0':
@@ -220,16 +233,21 @@ static Token *lex_number(void)
     }
   Loop:
 
+    // See: https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_10
+    //
+    // if Lex->del is set to true, the previous found token has a '<' or 
+    // '>' in its string representation, making this number to be 
+    // delimited by '<' or '>'. Therefore, the token type is IO_NUMBER.
     if (l->del) {
 	t->type = TIONumber;
 	l->del = false;
 	return t;
     }
 
-    if (is_space(peek())) {
-	lex_space();
-    }
+    lex_space();
 
+    // After skipping the spaces, we look if this token is delimited by '<'
+    // or '>'.
     char c = peek();
     if (c == '<' || c == '>') {
 	t->type = TIONumber;
@@ -238,7 +256,8 @@ static Token *lex_number(void)
     return t;
 }
 
-// lex_less scans a TLess, TDLess or TLessAnd.
+// lex_less scans:  TLess  TDLess TLessAnd TDLessDash  TLessGreat.
+//                 '<'    '<<'   '<&'     '<<-'       '<>'
 static Token *lex_less(void)
 {
     switch (peek()) {
@@ -254,6 +273,7 @@ static Token *lex_less(void)
 	    next();
 	    return emit(TDLessDash);
 	}
+
 	return emit(TDLess);
 
 	// <&
@@ -268,7 +288,8 @@ static Token *lex_less(void)
     }
 }
 
-// lex_less scans a TGreat, TDGreat or TGreatAnd.
+// lex_less scans:  TGreat  TDGreat  TGreatAnd  TLobber.
+//                  '>'     '>>'     '>&'       '>|'
 static Token *lex_great(void)
 {
     switch (peek()) {
@@ -294,8 +315,7 @@ static Token *lex_great(void)
     }
 }
 
-// lex_space consumes the space characteres. lex_space is supposed to be called
-// when one space has already been seen.
+// lex_space consumes the space characteres.
 static void lex_space(void)
 {
     while (is_space(peek())) {

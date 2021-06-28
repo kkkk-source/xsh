@@ -11,10 +11,12 @@ typedef enum {
     TWord,      // any
     TIONumber,  // Integer positive number delimited by '<' or '>'
     TNewLine,   // \n
+    TAnd,       // &
+    TOr,        // |
+    TSemi,      // ;
     TAndIf,     // &&
     TOrIf,      // ||
     TDSemi,     // ;;
-    TAnd,       // &
     TLess,      // <
     TGreat,     // >
     TDLess,     // <<
@@ -42,19 +44,21 @@ Type = {
 	TWord = 1,
 	TIONumber = 2,
 	TNewLine = 3,
-	TAndIf = 4,
-	TOrIf = 5,
-	TDSemi = 6,
-	TAnd = 7,
-	TLess = 8,
-	TGreat = 9,
-	TDLess = 10,
-	TDGreat = 11,
-	TLessAnd = 12,
-	TGreatAnd = 13,
-	TLessGreat = 14,
-	TDLessDash = 15,
-	TLobber = 16,
+	TAnd = 4,
+	TOr = 5,
+	TSemi = 6,
+	TAndIf = 7,
+	TOrIf = 8,
+	TDSemi = 9,
+	TLess = 10,
+	TGreat = 11,
+	TDLess = 12,
+	TDGreat = 13,
+	TLessAnd = 14,
+	TGreatAnd = 15,
+	TLessGreat = 16,
+	TDLessDash = 17,
+	TLobber = 18,
 }
 
 local stests = {
@@ -69,13 +73,14 @@ local stests = {
 	{input = "8", want = "8", type = Type.TWord},
 	{input = "9", want = "9", type = Type.TWord},
 	{input = "1234567890", want = "1234567890", type = Type.TWord},
-
+	{input = "&", want = "&", type = Type.TAnd},
+	{input = "|", want = "|", type = Type.TOr},
+	{input = ";", want = ";", type = Type.TSemi},
+	{input = "<", want = "<", type = Type.TLess},
+	{input = ">", want = ">", type = Type.TGreat},
 	{input = "&&", want = "&&", type = Type.TAndIf},
 	{input = "||", want = "||", type = Type.TOrIf},
 	{input = ";;", want = ";;", type = Type.TDSemi},
-	{input = "&", want = "&", type = Type.TAnd},
-	{input = "<", want = "<", type = Type.TLess},
-	{input = ">", want = ">", type = Type.TGreat},
 	{input = "<<", want = "<<", type = Type.TDLess},
 	{input = ">>", want = ">>", type = Type.TDGreat},
 	{input = "<&", want = "<&", type = Type.TLessAnd},
@@ -83,8 +88,6 @@ local stests = {
 	{input = "<>", want = "<>", type = Type.TLessGreat},
 	{input = "<<-", want = "<<-", type = Type.TDLessDash},
 	{input = ">|", want = ">|", type = Type.TLobber},
-
-	-- space at the left side
 	{input = " \t 0 \t ", want = "0", type = Type.TWord},
 	{input = " \t 1 \t ", want = "1", type = Type.TWord},
 	{input = " \t 2 \t ", want = "2", type = Type.TWord},
@@ -96,13 +99,15 @@ local stests = {
 	{input = " \t 8 \t ", want = "8", type = Type.TWord},
 	{input = " \t 9 \t ", want = "9", type = Type.TWord},
 	{input = " \t 1234567890 \t ", want = "1234567890", type = Type.TWord},
-
+	{input = " \t & \t ", want = "&", type = Type.TAnd},
+	{input = " \t | \t", want = "|", type = Type.TOr},
+	{input = " \t ; \t ", want = ";", type = Type.TSemi},
+	{input = " \t < \t ", want = "<", type = Type.TLess},
+	{input = " \t > \t ", want = ">", type = Type.TGreat},
 	{input = " \t && \t ", want = "&&", type = Type.TAndIf},
 	{input = " \t || \t ", want = "||", type = Type.TOrIf},
 	{input = " \t ;; \t ", want = ";;", type = Type.TDSemi},
 	{input = " \t & \t ", want = "&", type = Type.TAnd},
-	{input = " \t < \t ", want = "<", type = Type.TLess},
-	{input = " \t > \t ", want = ">", type = Type.TGreat},
 	{input = " \t << \t ", want = "<<", type = Type.TDLess},
 	{input = " \t >> \t ", want = ">>", type = Type.TDGreat},
 	{input = " \t <& \t ", want = "<&", type = Type.TLessAnd},
@@ -110,7 +115,6 @@ local stests = {
 	{input = " \t <> \t ", want = "<>", type = Type.TLessGreat},
 	{input = " \t <<- \t ", want = "<<-", type = Type.TDLessDash},
 	{input = " \t >| \t ", want = ">|", type = Type.TLobber},
-
 	{input = "", want = "", type = Type.TEOF},
 	{input = " ", want = "", type = Type.TEOF},
 	{input = "\t", want = "", type = Type.TEOF},
@@ -118,8 +122,8 @@ local stests = {
 }
 
 print '\tlexer test: single tokens'
+lex.lex_make()
 for k, tt in pairs(stests) do
-	lex.lex_make()
 	lex.lex_readfrom(tt.input)
 
 	local t = lex.lex_next()
@@ -138,18 +142,23 @@ end
 
 local mtests = {
 	{
-		input = " 0 1 2 3 4 5 6 7 8 9 ",
+		input = " 0 1 2 3 4 ",
 		tokens = {
 			{type = Type.TWord, text = "0"},
 			{type = Type.TWord, text = "1"},
 			{type = Type.TWord, text = "2"},
 			{type = Type.TWord, text = "3"},
 			{type = Type.TWord, text = "4"},
-			{type = Type.TWord, text = "5"},
-			{type = Type.TWord, text = "6"},
-			{type = Type.TWord, text = "7"},
-			{type = Type.TWord, text = "8"},
-			{type = Type.TWord, text = "9"},
+		},
+	},
+	{
+		input = "><|&;",
+		tokens = {
+			{type = Type.TGreat, text = ">"},
+			{type = Type.TLess, text = "<"},
+			{type = Type.TOr, text = "|"},
+			{type = Type.TAnd, text = "&"},
+			{type = Type.TSemi, text = ";"},
 		},
 	},
 	{
@@ -219,8 +228,8 @@ local mtests = {
 }
 
 print '\tlexer test: multiple tokens'
+lex.lex_make()
 for k, tt in pairs(mtests) do
-	lex.lex_make()
 	lex.lex_readfrom(tt.input)
 
 	for _, want in pairs(tt.tokens) do
