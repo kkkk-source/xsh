@@ -2,11 +2,20 @@
 %token  IO_NUMBER
 %token  NEWLINE
 
-%token  AND  LESS  GREAT  DLESS  DGREAT  LESSAND  GREATAND  LESSGREAT  DLESSDASH
-/*      '&'  '<'   '>'    '<<'   '>>'    '<&'     '>&'      '<>'       '<<-'   */
+/* The following are the operators mentioned above. */
+
+%token  AND_IF    OR_IF    DSEMI
+/*      '&&'      '||'     ';;'    */
+
+%token  DLESS  DGREAT  LESSAND  GREATAND  LESSGREAT  DLESSDASH
+/*      '<<'   '>>'    '<&'     '>&'      '<>'       '<<-'   */
 
 %token  CLOBBER
 /*      '>|'   */
+
+/* -------------------------------------------------------
+   The Grammar
+   ------------------------------------------------------- */
 
 program          : complete_command linebreak
                  | linebreak
