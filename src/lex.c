@@ -214,5 +214,6 @@ static void lex_space(void)
 // is_space reports whether c is a space character.
 static bool is_space(const char c)
 {
-    return c == ' ' || c == '\n' || c == '\t';
+    return c == ' ' || c == '\n' || c == '\t' || c == '\v' || c == '\f'
+	|| c == '\r';
 }
