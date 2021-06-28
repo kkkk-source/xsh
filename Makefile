@@ -1,3 +1,6 @@
+indent:
+	indent -kr src/main.c src/lex.c src/lex.h
+
 build:
 	gcc -o main src/main.c src/lex.c -Wall -Werror
 
