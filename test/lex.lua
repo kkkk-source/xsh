@@ -43,7 +43,7 @@ Type = {
 	TGreatAnd = 9,
 }
 
-local tests = {
+local stests = {
 	{input = "0", want = "0", type = Type.TIONumber},
 	{input = "1", want = "1", type = Type.TIONumber},
 	{input = "2", want = "2", type = Type.TIONumber},
@@ -123,33 +123,124 @@ local tests = {
 	{input = "  >>  ", want = ">>", type = Type.TDGreat},
 
 	{input = "", want = "", type = Type.TEOF},
+	{input = " ", want = "", type = Type.TEOF},
 	{input = "\n", want = "", type = Type.TEOF},
 	{input = "\t", want = "", type = Type.TEOF},
-	{input = "\n\t", want = "", type = Type.TEOF},
-	{input = "\t\n", want = "", type = Type.TEOF},
-	{input = "\t\n\t", want = "", type = Type.TEOF},
-	{input = "\n\t\n", want = "", type = Type.TEOF},
 
 	{input = "*", want = "*", type = Type.TUNK},
 	{input = "?", want = "?", type = Type.TUNK},
 	{input = "#", want = "#", type = Type.TUNK},
 }
 
-print 'lexer tests:'
-for k, tt in pairs(tests) do
+print 'lexer tests: single tokens'
+for k, tt in pairs(stests) do
 	lex.lex_make()
 	lex.lex_readfrom(tt.input)
 
 	local t = lex.lex_next()
-	local got = ffi.string(t.text)
 	
-	if got ~= tt.want then
-		print(string.format("\ttoken.text test at k=%d: got=%s, \z
-			want=%s", k, got, tt.want))
-	end
-
 	if t.type ~= tt.type then
 		print(string.format("\ttoken.type test at k=%d: got=%s, \z
 			want=%s", k, t.type, tt.type))
+	end
+
+	if ffi.string(t.text) ~= tt.want then
+		print(string.format("\ttoken.text test at k=%d: got=%s, \z
+			want=%s", k, ffi.string(t.text), tt.want))
+	end
+end
+
+
+local mtests = {
+	{
+		input = " 0 1 2 3 4 5 6 7 8 9 ",
+		tokens = {
+			{type = Type.TIONumber, text = "0"},
+			{type = Type.TIONumber, text = "1"},
+			{type = Type.TIONumber, text = "2"},
+			{type = Type.TIONumber, text = "3"},
+			{type = Type.TIONumber, text = "4"},
+			{type = Type.TIONumber, text = "5"},
+			{type = Type.TIONumber, text = "6"},
+			{type = Type.TIONumber, text = "7"},
+			{type = Type.TIONumber, text = "8"},
+			{type = Type.TIONumber, text = "9"},
+		},
+	},
+	{
+		input = "&<&<<",
+		tokens = {
+			{type = Type.TAnd, text = "&"},
+			{type = Type.TLessAnd, text = "<&"},
+			{type = Type.TDLess, text = "<<"},
+		},
+	},
+	{
+		input = "&>&>>",
+		tokens = {
+			{type = Type.TAnd, text = "&"},
+			{type = Type.TGreatAnd, text = ">&"},
+			{type = Type.TDGreat, text = ">>"},
+		},
+	},
+	{
+		input = "1<&2",
+		tokens = {
+			{type = Type.TIONumber, text = "1"},
+			{type = Type.TLessAnd, text = "<&"},
+			{type = Type.TIONumber, text = "2"},
+		},
+	},
+	{
+		input = "1>&2",
+		tokens = {
+			{type = Type.TIONumber, text = "1"},
+			{type = Type.TGreatAnd, text = ">&"},
+			{type = Type.TIONumber, text = "2"},
+		},
+	},
+	{
+		input = "1>>2",
+		tokens = {
+			{type = Type.TIONumber, text = "1"},
+			{type = Type.TDGreat, text = ">>"},
+			{type = Type.TIONumber, text = "2"},
+		},
+	},
+	{
+		input = "1<<2",
+		tokens = {
+			{type = Type.TIONumber, text = "1"},
+			{type = Type.TDLess, text = "<<"},
+			{type = Type.TIONumber, text = "2"},
+		},
+	},
+	{
+		input = "012345678901234567890&0123456878901234567890",
+		tokens = {
+			{type = Type.TIONumber, text = "012345678901234567890"},
+			{type = Type.TAnd, text = "&"},
+			{type = Type.TIONumber, text = "0123456878901234567890"},
+		},
+	},
+}
+
+print 'lexer tests: multiple tokens'
+for k, tt in pairs(mtests) do
+	lex.lex_make()
+	lex.lex_readfrom(tt.input)
+
+	for _, want in pairs(tt.tokens) do
+		local got = lex.lex_next()
+
+		if got.type ~= want.type then
+			print(string.format("\ttoken.type test at k=%d: got=%s, \z
+				want=%s", k, got.type, want.type))
+		end
+
+		if ffi.string(got.text) ~= want.text then
+			print(string.format("\ttoken.text test at k=%d: got=%s, \z
+				want=%s", k, ffi.string(got.text), want.text))
+		end
 	end
 end
