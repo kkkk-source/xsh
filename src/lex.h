@@ -2,6 +2,9 @@
 // lex.h - lexical analysis
 //
 
+#ifndef LEX_H
+#define LEX_H
+
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -10,6 +13,7 @@ typedef enum {
     TWord,			// Any
     TIONumber,			// Integer positive number delimited by '<' or '>'
     TNewLine,			// \n
+
     TAnd,			// &
     TOr,			// |
     TSemi,			// ;
@@ -25,7 +29,20 @@ typedef enum {
     TLessGreat,			// <>
     TDLessDash,			// <<-
     TLobber,			// >|
-} Type;
+
+    TIf,			// if
+    TThen,			// then
+    TElse,			// else
+    TElif,			// elif
+    TFi,			// fi
+    TDo,			// do
+    TDone,			// done
+    TCase,			// case
+    TEsac,			// esac
+    TWhile,			// while
+    TUntil,			// until
+    TFor,			// for
+} TokenType;
 
 // Lex holds the state of the lexer.
 typedef struct __sLex {
@@ -75,9 +92,11 @@ typedef struct __sLex {
 // Token represents a token or text string returned from the lexer.
 typedef struct __sToken {
     char *text;			// String representation of the token.
-    Type type;			// Type of the current token.
+    TokenType type;		// Type of the current token.
 } Token;
 
 Lex *lex_make(void);
 void lex_readfrom(const char *);
 Token *lex_next(void);
+
+#endif
