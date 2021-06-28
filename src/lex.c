@@ -17,6 +17,9 @@ static char peek(void);
 static void ignore(void);
 static Token *emit(Type);
 static Token *lex_number(void);
+static Token *lex_and(void);
+static Token *lex_or(void);
+static Token *lex_semi(void);
 static Token *lex_less(void);
 static Token *lex_great(void);
 static void lex_space(void);
@@ -33,19 +36,21 @@ Lex *lex_make(void)
 {
     l = malloc(sizeof(Lex));
     l->pos = 0;
-    l->start = 0;
-    l->done = false;
+    l->stt = 0;
+    l->done = true;
+    l->del = false;
     return l;
 }
 
 // lex_readfrom sets Lex->input to point to the new input provided by the
-// caller and reset Lex->pos, Lex->start, and Lex->done to its zero values.
+// caller and reset Lex->pos, Lex->stt, and Lex->done to its zero values.
 void lex_readfrom(const char *input)
 {
     l->input = input;
     l->pos = 0;
-    l->start = 0;
+    l->stt = 0;
     l->done = false;
+    l->del = false;
 }
 
 // lex_next returns the next token available in input.
@@ -55,21 +60,38 @@ Token *lex_next(void)
 	switch (next()) {
 
 	default:
-	    return emit(TUNK);
+	    l->del = false;
+	    return emit(TWord);
 
 	case '\0':
 	    // The null-terminated character has already been reached from the
 	    // input, which means, there is no more input to
 	    // read from until lex_readfrom get called.
+	    l->del = false;
 	    return emit(TEOF);
 
+	case '\n':
+	    l->del = false;
+	    return emit(TNewLine);
+
 	case '&':
-	    return emit(TAnd);
+	    l->del = false;
+	    return lex_and();
+
+	case '|':
+	    l->del = false;
+	    return lex_or();
+
+	case ';':
+	    l->del = false;
+	    return lex_semi();
 
 	case '<':
+	    l->del = true;
 	    return lex_less();
 
 	case '>':
+	    l->del = true;
 	    return lex_great();
 
 	case '0':
@@ -85,8 +107,10 @@ Token *lex_next(void)
 	    return lex_number();
 
 	case ' ':
-	case '\n':
 	case '\t':
+	case '\v':
+	case '\f':
+	case '\r':
 	    lex_space();
 	    break;
 	}
@@ -116,7 +140,7 @@ static char peek(void)
 // ignore skips over the pending input before this point.
 static void ignore(void)
 {
-    l->start = l->pos;
+    l->stt = l->pos;
 }
 
 // emit returns a token back to the caller.
@@ -125,23 +149,60 @@ static Token *emit(Type type)
     Token *t = malloc(sizeof(Token));
     t->type = type;
 
-    int n = l->pos - l->start;
+    if (type == TNewLine || type == TEOF) {
+	l->stt = l->pos;
+	t->text = "";
+	return t;
+    }
+
+    int n = l->pos - l->stt;
     t->text = malloc(sizeof(char) * (n + 1));
     t->text[n] = '\0';
 
-    strncpy(t->text, l->input + l->start, n);
-    l->start = l->pos;
+    strncpy(t->text, l->input + l->stt, n);
+    l->stt = l->pos;
     return t;
+}
+
+static Token *lex_and(void)
+{
+    if (peek() == '&') {
+	next();
+	return emit(TAndIf);
+    }
+    return emit(TAnd);
+}
+
+static Token *lex_or(void)
+{
+    if (peek() == '|') {
+	next();
+	return emit(TOrIf);
+    }
+    // TODO: What does this should return.
+    return emit(TWord);
+}
+
+static Token *lex_semi(void)
+{
+    if (peek() == ';') {
+	next();
+	return emit(TDSemi);
+    }
+    // TODO: What does this should return.
+    return emit(TWord);
 }
 
 // lex_number scans an integer positive number.
 static Token *lex_number(void)
 {
+    Token *t;
     for (;;) {
 	switch (peek()) {
 
 	default:
-	    return emit(TIONumber);
+	    t = emit(TWord);
+	    goto Loop;
 
 	case '0':
 	case '1':
@@ -157,6 +218,24 @@ static Token *lex_number(void)
 	    break;
 	}
     }
+  Loop:
+
+    if (l->del) {
+	t->type = TIONumber;
+	l->del = false;
+	return t;
+    }
+
+    if (is_space(peek())) {
+	lex_space();
+    }
+
+    char c = peek();
+    if (c == '<' || c == '>') {
+	t->type = TIONumber;
+    }
+
+    return t;
 }
 
 // lex_less scans a TLess, TDLess or TLessAnd.
@@ -168,15 +247,24 @@ static Token *lex_less(void)
     default:
 	return emit(TLess);
 
-	// <<
+	// << or <<-
     case '<':
 	next();
+	if (peek() == '-') {
+	    next();
+	    return emit(TDLessDash);
+	}
 	return emit(TDLess);
 
 	// <&
     case '&':
 	next();
 	return emit(TLessAnd);
+
+	// <>
+    case '>':
+	next();
+	return emit(TLessGreat);
     }
 }
 
@@ -198,6 +286,11 @@ static Token *lex_great(void)
     case '&':
 	next();
 	return emit(TGreatAnd);
+
+	// >|
+    case '|':
+	next();
+	return emit(TLobber);
     }
 }
 
@@ -214,6 +307,5 @@ static void lex_space(void)
 // is_space reports whether c is a space character.
 static bool is_space(const char c)
 {
-    return c == ' ' || c == '\n' || c == '\t' || c == '\v' || c == '\f'
-	|| c == '\r';
+    return c == ' ' || c == '\t' || c == '\v' || c == '\f' || c == '\r';
 }
