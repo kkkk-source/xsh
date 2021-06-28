@@ -8,6 +8,7 @@
 #include <string.h>
 
 #include "lex.h"
+#include "keyw.h"
 
 Lex *lex_make(void);
 void lex_readfrom(const char *);
@@ -15,7 +16,9 @@ Token *lex_next(void);
 static char next(void);
 static char peek(void);
 static void ignore(void);
-static Token *emit(Type);
+static Token *emit(TokenType);
+static Token *lex_keyword(void);
+static Token *lex_word(void);
 static Token *lex_number(void);
 static Token *lex_and(void);
 static Token *lex_or(void);
@@ -53,68 +56,6 @@ void lex_readfrom(const char *input)
     l->del = false;
 }
 
-// lex_next returns the next token available in input.
-Token *lex_next(void)
-{
-    for (;;) {
-	switch (next()) {
-
-	default:
-	    return emit(TWord);
-
-	case '\0':
-
-	    // The null-terminated character has already been reached from the
-	    // input, which means, there is no more input to read from.
-	    return emit(TEOF);
-
-	case '\n':
-	    l->del = false;
-	    return emit(TNewLine);
-
-	case '&':
-	    l->del = false;
-	    return lex_and();
-
-	case '|':
-	    l->del = false;
-	    return lex_or();
-
-	case ';':
-	    l->del = false;
-	    return lex_semi();
-
-	case '<':
-	    l->del = true;
-	    return lex_less();
-
-	case '>':
-	    l->del = true;
-	    return lex_great();
-
-	case '0':
-	case '1':
-	case '2':
-	case '3':
-	case '4':
-	case '5':
-	case '6':
-	case '7':
-	case '8':
-	case '9':
-	    return lex_number();
-
-	case ' ':
-	case '\t':
-	case '\v':
-	case '\f':
-	case '\r':
-	    lex_space();
-	    break;
-	}
-    }
-}
-
 // next returns the next character in the input.
 static char next(void)
 {
@@ -142,7 +83,7 @@ static void ignore(void)
 }
 
 // emit returns a token back to the caller.
-static Token *emit(Type type)
+static Token *emit(TokenType type)
 {
     Token *t = malloc(sizeof(Token));
     t->type = type;
@@ -160,6 +101,139 @@ static Token *emit(Type type)
     strncpy(t->text, l->input + l->stt, n);
     l->stt = l->pos;
     return t;
+}
+
+// lex_next returns the next token available in input.
+Token *lex_next(void)
+{
+    for (;;) {
+	switch (next()) {
+
+	default:
+	    return lex_word();
+
+	case '\n':
+	    l->del = false;
+	    return emit(TNewLine);
+
+	case '&':
+	    l->del = false;
+	    return lex_and();
+
+	case '|':
+	    l->del = false;
+	    return lex_or();
+
+	case ';':
+	    l->del = false;
+	    return lex_semi();
+
+	case '<':
+	    l->del = true;
+	    return lex_less();
+
+	case '>':
+	    l->del = true;
+	    return lex_great();
+
+	case 'i':
+	case 't':
+	case 'e':
+	case 'f':
+	case 'd':
+	case 'c':
+	case 'u':
+	case 'w':
+	    l->del = false;
+	    return lex_keyword();
+
+	case '0':
+	case '1':
+	case '2':
+	case '3':
+	case '4':
+	case '5':
+	case '6':
+	case '7':
+	case '8':
+	case '9':
+	    return lex_number();
+
+	case ' ':
+	case '\t':
+	case '\v':
+	case '\f':
+	case '\r':
+	    lex_space();
+	    break;
+
+	case '\0':
+
+	    // The null-terminated character has already been reached from the
+	    // input, which means, there is no more input to read from.
+	    return emit(TEOF);
+	}
+    }
+}
+
+static Token *lex_keyword(void)
+{
+    for (;;) {
+	switch (peek()) {
+
+	default:
+	    next();
+	    return lex_word();
+
+	case 'a':
+	case 'c':
+	case 'd':
+	case 'e':
+	case 'f':
+	case 'h':
+	case 'i':
+	case 'l':
+	case 'n':
+	case 'o':
+	case 'r':
+	case 's':
+	case 't':
+	case 'u':
+	case 'w':
+	    next();
+	    break;
+
+	case ' ':
+	case '\t':
+	case '\v':
+	case '\f':
+	case '\r':
+	case '\0':
+	    Token * t = emit(TWord);
+	    t->type = keyw_gettype(t->text);
+	    return t;
+	}
+    }
+}
+
+static Token *lex_word(void)
+{
+    for (;;) {
+	switch (peek()) {
+
+	default:
+	    next();
+	    break;
+
+	case ' ':
+	case '\t':
+	case '\v':
+	case '\f':
+	case '\r':
+	case '\0':
+	    return emit(TWord);
+	}
+    }
 }
 
 static Token *lex_and(void)
@@ -191,7 +265,6 @@ static Token *lex_semi(void)
 
     return emit(TSemi);
 }
-
 
 // lex_number scans an integer positive number: Tword  TIONumber.
 static Token *lex_number(void)
