@@ -4,6 +4,6 @@
 #include <stdbool.h>
 #include "lex.h"
 
-TokenType keyw_gettype(const char *);
+TokenType keyw_typeof(const char *);
 
 #endif

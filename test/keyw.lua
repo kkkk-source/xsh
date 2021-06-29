@@ -37,7 +37,7 @@ typedef enum {
     TFor,       // for
 } TokenType;
 
-TokenType keyw_gettype(const char *);
+TokenType keyw_typeof(const char *);
 
 ]]
 
@@ -70,12 +70,12 @@ local tests = {
 	{keyword = "while", want = TokenType.TWhile},
 	{keyword = "until", want = TokenType.TUntil},
 	{keyword = "for", want = TokenType.TFor},
-	{keyword = "ifforuntil", want = TokenType.TWord},
+	{keyword = "ifthenelseeliffidodonecaseesacwhileuntilfor", want = TokenType.TWord},
 }
 
-print '\tkeyw test: keywords'
+print '\tkeyw test:'
 for k, t in pairs(tests) do
-	local got = keyw.keyw_gettype(t.keyword)
+	local got = keyw.keyw_typeof(t.keyword)
 
 	if got ~= t.want then
 		print(string.format("\tkeyword.type test at k=%d: got=%s, \z

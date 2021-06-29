@@ -38,10 +38,10 @@ static bool streq(const char *, const char *);
 
 // ---------------------------------------------------------------------------
 
-// keyw_getttype returns the TokenType of the keyword provided.  If the
+// keyw_typeof returns the TokenType of the keyword provided.  If the
 // provided keyword is, actually, not a keyword, keyw_gettype returns the type
 // TWord.
-TokenType keyw_gettype(const char *keyword)
+TokenType keyw_typeof(const char *keyword)
 {
     for (int i = 0; i < LENGTH; i++) {
 	if (streq(keyword, keywords[i])) {
