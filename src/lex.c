@@ -139,6 +139,9 @@ Token *lex_next(void)
 	case 'c':
 	case 'u':
 	case 'w':
+	case '{':
+	case '}':
+	case '!':
 	    return lex_keyword();
 
 	case '0':
@@ -378,14 +381,20 @@ static Token *lex_great(void)
 // lex_space consumes the space characteres.
 static void lex_space(void)
 {
-    while (is_space(peek())) {
-	next();
-    }
-    ignore();
-}
+    for (;;) {
+	switch (peek()) {
 
-// is_space reports whether c is a space character.
-static bool is_space(const char c)
-{
-    return c == ' ' || c == '\t' || c == '\v' || c == '\f' || c == '\r';
+	  defualt:
+	    ignore();
+	    return;
+
+	case ' ':
+	case '\t':
+	case '\v':
+	case '\f':
+	case '\r':
+	case '\n':
+	    next();
+	}
+    }
 }

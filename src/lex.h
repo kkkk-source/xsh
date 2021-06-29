@@ -42,6 +42,10 @@ typedef enum {
     TWhile,			// while
     TUntil,			// until
     TFor,			// for
+
+    TLBrace,			// {
+    TRBrace,			// }
+    TBang,			// !
 } TokenType;
 
 // Lex holds the state of the lexer.
