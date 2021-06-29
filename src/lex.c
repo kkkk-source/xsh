@@ -26,7 +26,6 @@ static Token *lex_semi(void);
 static Token *lex_less(void);
 static Token *lex_great(void);
 static void lex_space(void);
-static bool is_space(const char);
 
 // ---------------------------------------------------------------------------
 
@@ -384,7 +383,7 @@ static void lex_space(void)
     for (;;) {
 	switch (peek()) {
 
-	  defualt:
+	default:
 	    ignore();
 	    return;
 
