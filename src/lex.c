@@ -41,7 +41,6 @@ Lex *lex_make(void)
     l->pos = 0;
     l->stt = 0;
     l->done = true;
-    l->del = false;
     return l;
 }
 
@@ -53,7 +52,6 @@ void lex_readfrom(const char *input)
     l->pos = 0;
     l->stt = 0;
     l->done = false;
-    l->del = false;
 }
 
 // next returns the next character in the input.
@@ -88,9 +86,15 @@ static Token *emit(TokenType type)
     Token *t = malloc(sizeof(Token));
     t->type = type;
 
-    if (type == TNewLine || type == TEOF) {
+    if (type == TNewLine) {
 	l->stt = l->pos;
-	t->text = "";
+	t->text = "\\n";
+	return t;
+    }
+
+    if (type == TEOF) {
+	l->stt = l->pos;
+	t->text = "eof";
 	return t;
     }
 
@@ -112,28 +116,19 @@ Token *lex_next(void)
 	default:
 	    return lex_word();
 
-	case '\n':
-	    l->del = false;
-	    return emit(TNewLine);
-
 	case '&':
-	    l->del = false;
 	    return lex_and();
 
 	case '|':
-	    l->del = false;
 	    return lex_or();
 
 	case ';':
-	    l->del = false;
 	    return lex_semi();
 
 	case '<':
-	    l->del = true;
 	    return lex_less();
 
 	case '>':
-	    l->del = true;
 	    return lex_great();
 
 	case 'i':
@@ -144,7 +139,6 @@ Token *lex_next(void)
 	case 'c':
 	case 'u':
 	case 'w':
-	    l->del = false;
 	    return lex_keyword();
 
 	case '0':
@@ -164,6 +158,7 @@ Token *lex_next(void)
 	case '\v':
 	case '\f':
 	case '\r':
+	case '\n':
 	    lex_space();
 	    break;
 
@@ -185,6 +180,17 @@ static Token *lex_keyword(void)
 	    next();
 	    return lex_word();
 
+	case ' ':
+	case '\t':
+	case '\v':
+	case '\f':
+	case '\r':
+	case '\n':
+	case '\0':
+	    Token * t = emit(TWord);
+	    t->type = keyw_typeof(t->text);
+	    return t;
+
 	case 'a':
 	case 'c':
 	case 'd':
@@ -202,16 +208,6 @@ static Token *lex_keyword(void)
 	case 'w':
 	    next();
 	    break;
-
-	case ' ':
-	case '\t':
-	case '\v':
-	case '\f':
-	case '\r':
-	case '\0':
-	    Token * t = emit(TWord);
-	    t->type = keyw_gettype(t->text);
-	    return t;
 	}
     }
 }
@@ -230,6 +226,7 @@ static Token *lex_word(void)
 	case '\v':
 	case '\f':
 	case '\r':
+	case '\n':
 	case '\0':
 	    return emit(TWord);
 	}
@@ -306,21 +303,11 @@ static Token *lex_number(void)
     }
   Loop:
 
-    // See: https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_10
-    //
-    // if Lex->del is set to true, the previous found token has a '<' or 
-    // '>' in its string representation, making this number to be 
-    // delimited by '<' or '>'. Therefore, the token type is IO_NUMBER.
-    if (l->del) {
-	t->type = TIONumber;
-	l->del = false;
-	return t;
-    }
-
+    // Consume all spaces.
     lex_space();
 
-    // After skipping the spaces, we look if this token is delimited by '<'
-    // or '>'.
+    // If the next character in input is '<' or '>', the current token is a
+    // TIONumber.
     char c = peek();
     if (c == '<' || c == '>') {
 	t->type = TIONumber;

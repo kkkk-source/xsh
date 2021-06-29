@@ -72,27 +72,17 @@ typedef struct __sLex {
     // read from. It is just set to false when lex_readfrom() get called.
     bool done;
 
-    // When there is a sequence of characteres of the form "1<&2", where '1'
-    // and '2' can be any number, then, '1' and '2' are tokens of the type
-    // TIONumber (IO_NUMBER). Therefore, when Lex->del is set to true, it
-    // lets "2" to know that the last found delimiter was a '<' or '>'.  As
-    // a result, "2" can be a TIONumber token type instead of a TWord
-    // token type. 
-    //
-    //
-    // "If the string consists solely of digits and the delimiter character
-    // is one of '<' or '>', the token identifier IO_NUMBER (TIONumber)
-    // shall be returned".  Taken from:
-    //
-    // https://pubs.opengroup.org/onlinepubs/009604499/utilities/xcu_chap02.html#tag_02_10
-    //
-    bool del;
 } Lex;
 
 // Token represents a token or text string returned from the lexer.
 typedef struct __sToken {
-    char *text;			// String representation of the token.
-    TokenType type;		// Type of the current token.
+
+    // String representation of the token.
+    char *text;
+
+    // Type of the current token.
+    TokenType type;
+
 } Token;
 
 Lex *lex_make(void);
