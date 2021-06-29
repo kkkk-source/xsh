@@ -35,6 +35,9 @@ typedef enum {
     TWhile,     // while
     TUntil,     // until
     TFor,       // for
+    TLBrace,			// {
+    TRBrace,			// }
+    TBang,			// !
 } TokenType;
 
 TokenType keyw_typeof(const char *);
@@ -55,6 +58,9 @@ TokenType = {
 	TWhile = 28,
 	TUntil = 29,
 	TFor = 30,
+    TLBrace = 31,
+    TRBrace = 32,
+    TBang = 33,
 }
 
 local tests = {
@@ -70,7 +76,17 @@ local tests = {
 	{keyword = "while", want = TokenType.TWhile},
 	{keyword = "until", want = TokenType.TUntil},
 	{keyword = "for", want = TokenType.TFor},
-	{keyword = "ifthenelseeliffidodonecaseesacwhileuntilfor", want = TokenType.TWord},
+	{keyword = "{", want = TokenType.TLBrace},
+	{keyword = "}", want = TokenType.TRBrace},
+	{keyword = "!", want = TokenType.TBang},
+	{keyword = "i", want = TokenType.TWord},
+	{keyword = "t", want = TokenType.TWord},
+	{keyword = "e", want = TokenType.TWord},
+	{keyword = "f", want = TokenType.TWord},
+	{keyword = "d", want = TokenType.TWord},
+	{keyword = "c", want = TokenType.TWord},
+	{keyword = "w", want = TokenType.TWord},
+	{keyword = "u", want = TokenType.TWord},
 }
 
 print '\tkeyw test:'
