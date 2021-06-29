@@ -85,225 +85,200 @@ TokenType = {
 	TFor = 30,
 }
 
-local stests = {
-	{input = "0", want = "0", type = TokenType.TWord},
-	{input = "1", want = "1", type = TokenType.TWord},
-	{input = "2", want = "2", type = TokenType.TWord},
-	{input = "3", want = "3", type = TokenType.TWord},
-	{input = "4", want = "4", type = TokenType.TWord},
-	{input = "5", want = "5", type = TokenType.TWord},
-	{input = "6", want = "6", type = TokenType.TWord},
-	{input = "7", want = "7", type = TokenType.TWord},
-	{input = "8", want = "8", type = TokenType.TWord},
-	{input = "9", want = "9", type = TokenType.TWord},
-	{input = "1234567890", want = "1234567890", type = TokenType.TWord},
-	{input = "&", want = "&", type = TokenType.TAnd},
-	{input = "|", want = "|", type = TokenType.TOr},
-	{input = ";", want = ";", type = TokenType.TSemi},
-	{input = "<", want = "<", type = TokenType.TLess},
-	{input = ">", want = ">", type = TokenType.TGreat},
-	{input = "&&", want = "&&", type = TokenType.TAndIf},
-	{input = "||", want = "||", type = TokenType.TOrIf},
-	{input = ";;", want = ";;", type = TokenType.TDSemi},
-	{input = "<<", want = "<<", type = TokenType.TDLess},
-	{input = ">>", want = ">>", type = TokenType.TDGreat},
-	{input = "<&", want = "<&", type = TokenType.TLessAnd},
-	{input = ">&", want = ">&", type = TokenType.TGreatAnd},
-	{input = "<>", want = "<>", type = TokenType.TLessGreat},
-	{input = "<<-", want = "<<-", type = TokenType.TDLessDash},
-	{input = ">|", want = ">|", type = TokenType.TLobber},
-	{input = "if", want = "if", type = TokenType.TIf},
-	{input = "then", want = "then", type = TokenType.TThen},
-	{input = "else", want = "else", type = TokenType.TElse},
-	{input = "elif", want = "elif", type = TokenType.TElif},
-	{input = "fi", want = "fi", type = TokenType.TFi},
-	{input = "do", want = "do", type = TokenType.TDo},
-	{input = "done", want = "done", type = TokenType.TDone},
-	{input = "case", want = "case", type = TokenType.TCase},
-	{input = "esac", want = "esac", type = TokenType.TEsac},
-	{input = "while", want = "while", type = TokenType.TWhile},
-	{input = "until", want = "until", type = TokenType.TUntil},
-	{input = "for", want = "for", type = TokenType.TFor},
-	{input = " \t 0 \t ", want = "0", type = TokenType.TWord},
-	{input = " \t 1 \t ", want = "1", type = TokenType.TWord},
-	{input = " \t 2 \t ", want = "2", type = TokenType.TWord},
-	{input = " \t 3 \t ", want = "3", type = TokenType.TWord},
-	{input = " \t 4 \t ", want = "4", type = TokenType.TWord},
-	{input = " \t 5 \t ", want = "5", type = TokenType.TWord},
-	{input = " \t 6 \t ", want = "6", type = TokenType.TWord},
-	{input = " \t 7 \t ", want = "7", type = TokenType.TWord},
-	{input = " \t 8 \t ", want = "8", type = TokenType.TWord},
-	{input = " \t 9 \t ", want = "9", type = TokenType.TWord},
-	{input = " \t 1234567890 \t ", want = "1234567890", type = TokenType.TWord},
-	{input = " \t & \t ", want = "&", type = TokenType.TAnd},
-	{input = " \t | \t", want = "|", type = TokenType.TOr},
-	{input = " \t ; \t ", want = ";", type = TokenType.TSemi},
-	{input = " \t < \t ", want = "<", type = TokenType.TLess},
-	{input = " \t > \t ", want = ">", type = TokenType.TGreat},
-	{input = " \t && \t ", want = "&&", type = TokenType.TAndIf},
-	{input = " \t || \t ", want = "||", type = TokenType.TOrIf},
-	{input = " \t ;; \t ", want = ";;", type = TokenType.TDSemi},
-	{input = " \t & \t ", want = "&", type = TokenType.TAnd},
-	{input = " \t << \t ", want = "<<", type = TokenType.TDLess},
-	{input = " \t >> \t ", want = ">>", type = TokenType.TDGreat},
-	{input = " \t <& \t ", want = "<&", type = TokenType.TLessAnd},
-	{input = " \t >& \t ", want = ">&", type = TokenType.TGreatAnd},
-	{input = " \t <> \t ", want = "<>", type = TokenType.TLessGreat},
-	{input = " \t <<- \t ", want = "<<-", type = TokenType.TDLessDash},
-	{input = " \t >| \t ", want = ">|", type = TokenType.TLobber},
-	{input = " \t if \t ", want = "if", type = TokenType.TIf},
-	{input = " \t then \t ", want = "then", type = TokenType.TThen},
-	{input = " \t else \t ", want = "else", type = TokenType.TElse},
-	{input = " \t elif \t ", want = "elif", type = TokenType.TElif},
-	{input = " \t fi \t ", want = "fi", type = TokenType.TFi},
-	{input = " \t do \t ", want = "do", type = TokenType.TDo},
-	{input = " \t done \t ", want = "done", type = TokenType.TDone},
-	{input = " \t case \t ", want = "case", type = TokenType.TCase},
-	{input = " \t esac \t ", want = "esac", type = TokenType.TEsac},
-	{input = " \t while \t ", want = "while", type = TokenType.TWhile},
-	{input = " \t until \t ", want = "until", type = TokenType.TUntil},
-	{input = " \t for \t ", want = "for", type = TokenType.TFor},
-	{input = "", want = "", type = TokenType.TEOF},
-	{input = " ", want = "", type = TokenType.TEOF},
-	{input = "\t", want = "", type = TokenType.TEOF},
-	{input = "\n", want = "", type = TokenType.TNewLine},
-	{input = "ifif", want = "ifif", type = TokenType.TWord},
-	{input = "thenthen", want = "thenthen", type = TokenType.TWord},
-	{input = "elseelse", want = "elseelse", type = TokenType.TWord},
-	{input = "elifelif", want = "elifelif", type = TokenType.TWord},
-	{input = "fifi", want = "fifi", type = TokenType.TWord},
-	{input = "dodo", want = "dodo", type = TokenType.TWord},
-	{input = "donedone", want = "donedone", type = TokenType.TWord},
-	{input = "casecase", want = "casecase", type = TokenType.TWord},
-	{input = "esacesac", want = "esacesac", type = TokenType.TWord},
-	{input = "whilewhile", want = "whilewhile", type = TokenType.TWord},
-	{input = "untiluntil", want = "untiluntil", type = TokenType.TWord},
-	{input = "forfor", want = "forfor", type = TokenType.TWord},
-	{input = "ifF", want = "ifF", type = TokenType.TWord},
-	{input = "thenN", want = "thenN", type = TokenType.TWord},
-	{input = "elseE", want = "elseE", type = TokenType.TWord},
-	{input = "elifF", want = "elifF", type = TokenType.TWord},
-	{input = "fiI", want = "fiI", type = TokenType.TWord},
-	{input = "doO", want = "doO", type = TokenType.TWord},
-	{input = "doneE", want = "doneE", type = TokenType.TWord},
-	{input = "caseE", want = "caseE", type = TokenType.TWord},
-	{input = "esacC", want = "esacC", type = TokenType.TWord},
-	{input = "whileE", want = "whileE", type = TokenType.TWord},
-	{input = "untilL", want = "untilL", type = TokenType.TWord},
-	{input = "forR", want = "forR", type = TokenType.TWord},
-}
-
-print '\tlexer test: single tokens'
-lex.lex_make()
-for k, tt in pairs(stests) do
-	lex.lex_readfrom(tt.input)
-
-	local t = lex.lex_next()
-	
-	if t.type ~= tt.type then
-		print(string.format("\ttoken.type test at k=%d: got=%s, \z
-			want=%s", k, t.type, tt.type))
-	end
-
-	if ffi.string(t.text) ~= tt.want then
-		print(string.format("\ttoken.text test at k=%d: got=%s, \z
-			want=%s", k, ffi.string(t.text), tt.want))
-	end
-end
-
-
-local mtests = {
+local tests = {
+	{input = "0", tokens = {{type = TokenType.TWord, text = "0"}}},
+	{input = "&", tokens = {{type = TokenType.TAnd, text = "&"}}},
+	{input = "|", tokens = {{type = TokenType.TOr, text = "|"}}},
+	{input = ";", tokens = {{type = TokenType.TSemi, text = ";"}}},
+	{input = "<", tokens = {{type = TokenType.TLess, text = "<"}}},
+	{input = ">", tokens = {{type = TokenType.TGreat, text = ">"}}},
+	{input = "&&", tokens = {{type = TokenType.TAndIf, text = "&&"}}},
+	{input = "||", tokens = {{type = TokenType.TOrIf, text = "||"}}},
+	{input = ";;", tokens = {{type = TokenType.TDSemi, text = ";;"}}},
+	{input = "<<", tokens = {{type = TokenType.TDLess, text = "<<"}}},
+	{input = ">>", tokens = {{type = TokenType.TDGreat, text = ">>"}}},
+	{input = "<&", tokens = {{type = TokenType.TLessAnd, text = "<&"}}},
+	{input = ">&", tokens = {{type = TokenType.TGreatAnd, text = ">&"}}},
+	{input = "<>", tokens = {{type = TokenType.TLessGreat, text = "<>"}}},
+	{input = "<<-", tokens = {{type = TokenType.TDLessDash, text = "<<-"}}},
+	{input = ">|", tokens = {{type = TokenType.TLobber, text = ">|"}}},
+	{input = "if", tokens = {{type = TokenType.TIf, text = "if"}}},
+	{input = "then", tokens = {{type = TokenType.TThen, text = "then"}}},
+	{input = "else", tokens = {{type = TokenType.TElse, text = "else"}}},
+	{input = "elif", tokens = {{type = TokenType.TElif, text = "elif"}}},
+	{input = "fi", tokens = {{type = TokenType.TFi, text = "fi"}}},
+	{input = "do", tokens = {{type = TokenType.TDo, text = "do"}}},
+	{input = "done", tokens = {{type = TokenType.TDone, text = "done"}}},
+	{input = "case", tokens = {{type = TokenType.TCase, text = "case"}}},
+	{input = "esac", tokens = {{type = TokenType.TEsac, text = "esac"}}},
+	{input = "while", tokens = {{type = TokenType.TWhile, text = "while"}}},
+	{input = "until", tokens = {{type = TokenType.TUntil, text = "until"}}},
+	{input = "ift", tokens = {{type = TokenType.TWord, text = "ift"}}},
+	{input = "thent", tokens = {{type = TokenType.TWord, text = "thent"}}},
+	{input = "elset", tokens = {{type = TokenType.TWord, text = "elset"}}},
+	{input = "elift", tokens = {{type = TokenType.TWord, text = "elift"}}},
+	{input = "fit", tokens = {{type = TokenType.TWord, text = "fit"}}},
+	{input = "tdot", tokens = {{type = TokenType.TWord, text = "tdot"}}},
+	{input = "tdone", tokens = {{type = TokenType.TWord, text = "tdone"}}},
+	{input = "tcase", tokens = {{type = TokenType.TWord, text = "tcase"}}},
+	{input = "tesac", tokens = {{type = TokenType.TWord, text = "tesac"}}},
+	{input = "twhile", tokens = {{type = TokenType.TWord, text = "twhile"}}},
+	{input = "tuntil", tokens = {{type = TokenType.TWord, text = "tuntil"}}},
+	{input = "&&||;;<<>>&>&<><<->|", tokens = {
+		{type = TokenType.TAndIf, text = "&&"},
+		{type = TokenType.TOrIf, text = "||"},
+		{type = TokenType.TDSemi, text = ";;"},
+		{type = TokenType.TDLess, text = "<<"},
+		{type = TokenType.TDGreat, text = ">>"},
+		{type = TokenType.TAnd, text = "&"},
+		{type = TokenType.TGreatAnd, text = ">&"},
+		{type = TokenType.TLessGreat, text = "<>"},
+		{type = TokenType.TDLessDash, text = "<<-"},
+		{type = TokenType.TLobber, text = ">|"}}
+	},
+	{input = "0&a", tokens = {
+		{type = TokenType.TWord, text = "0"},
+		{type = TokenType.TAnd, text = "&"},
+		{type = TokenType.TWord, text = "a"}}
+	},
+	{input = "1|b", tokens = {
+		{type = TokenType.TWord, text = "1"},
+		{type = TokenType.TOr, text = "|"},
+		{type = TokenType.TWord, text = "b"}}
+	},
+	{input = "2;c", tokens = {
+		{type = TokenType.TWord, text = "2"},
+		{type = TokenType.TSemi, text = ";"},
+		{type = TokenType.TWord, text = "c"}}
+	},
+	{input = "3&&&d", tokens = {
+		{type = TokenType.TWord, text = "3"},
+		{type = TokenType.TAndIf, text = "&&"},
+		{type = TokenType.TAnd, text = "&"},
+		{type = TokenType.TWord, text = "d"}}
+	},
+	{input = "4|||e", tokens = {
+		{type = TokenType.TWord, text = "4"},
+		{type = TokenType.TOrIf, text = "||"},
+		{type = TokenType.TOr, text = "|"},
+		{type = TokenType.TWord, text = "e"}}
+	},
+	{input = "5;;;f", tokens = {
+		{type = TokenType.TWord, text = "5"},
+		{type = TokenType.TDSemi, text = ";;"},
+		{type = TokenType.TSemi, text = ";"},
+		{type = TokenType.TWord, text = "f"}}
+	},
+	{input = "&&&&", tokens = {
+		{type = TokenType.TAndIf, text = "&&"},
+		{type = TokenType.TAndIf, text = "&&"}}
+	},
+	{input = "||||", tokens = {
+		{type = TokenType.TOrIf, text = "||"},
+		{type = TokenType.TOrIf, text = "||"}}
+	},
+	{input = ";;;;", tokens = {
+		{type = TokenType.TDSemi, text = ";;"},
+		{type = TokenType.TDSemi, text = ";;"}}
+	},
+	{input = ">>>", tokens = {
+		{type = TokenType.TDGreat, text = ">>"},
+		{type = TokenType.TGreat, text = ">"}}
+	},
+	{input = "<<<", tokens = {
+		{type = TokenType.TDLess, text = "<<"},
+		{type = TokenType.TLess, text = "<"}}
+	},
+	{input = "<<<<", tokens = {
+		{type = TokenType.TDLess, text = "<<"},
+		{type = TokenType.TDLess, text = "<<"}}
+	},
+	{input = ">>>>", tokens = {
+		{type = TokenType.TDGreat, text = ">>"},
+		{type = TokenType.TDGreat, text = ">>"}}
+	},
+	{input = "<&<&", tokens = {
+		{type = TokenType.TLessAnd, text = "<&"},
+		{type = TokenType.TLessAnd, text = "<&"}}
+	},
+	{input = ">&>&", tokens = {
+		{type = TokenType.TGreatAnd, text = ">&"},
+		{type = TokenType.TGreatAnd, text = ">&"}}
+	},
+	{input = "<<-<<-", tokens = {
+		{type = TokenType.TDLessDash, text = "<<-"},
+		{type = TokenType.TDLessDash, text = "<<-"}}
+	},
+	{input = ">|>|", tokens = {
+		{type = TokenType.TLobber, text = ">|"},
+		{type = TokenType.TLobber, text = ">|"}}
+	},
+	{input = "0<1", tokens = {
+		{type = TokenType.TIONumber, text = "0"},
+		{type = TokenType.TLess, text = "<"},
+		{type = TokenType.TWord, text = "1"}}
+	},
+	{input = "2>3", tokens = {
+		{type = TokenType.TIONumber, text = "2"},
+		{type = TokenType.TGreat, text = ">"},
+		{type = TokenType.TWord, text = "3"}}
+	},
+	{input = "4<&5", tokens = {
+		{type = TokenType.TIONumber, text = "4"},
+		{type = TokenType.TLessAnd, text = "<&"},
+		{type = TokenType.TWord, text = "5"}}
+	},
+	{input = "6>&7", tokens = {
+		{type = TokenType.TIONumber, text = "6"},
+		{type = TokenType.TGreatAnd, text = ">&"},
+		{type = TokenType.TWord, text = "7"}}
+	},
+	{input = "8>|9", tokens = {
+		{type = TokenType.TIONumber, text = "8"},
+		{type = TokenType.TLobber, text = ">|"},
+		{type = TokenType.TWord, text = "9"}}
+	},
+	{input = "10>>11", tokens = {
+		{type = TokenType.TIONumber, text = "10"},
+		{type = TokenType.TDGreat, text = ">>"},
+		{type = TokenType.TWord, text = "11"}}
+	},
+	{input = "12<<13", tokens = {
+		{type = TokenType.TIONumber, text = "12"},
+		{type = TokenType.TDLess, text = "<<"},
+		{type = TokenType.TWord, text = "13"}}
+	},
+	{input = "14<>15", tokens = {
+		{type = TokenType.TIONumber, text = "14"},
+		{type = TokenType.TLessGreat, text = "<>"},
+		{type = TokenType.TWord, text = "15"}}
+	},
 	{
-		input = " 0 1 2 3 4 ",
+		input = "0 & | ; < > && || ;; << >> <& >& <> <<- >|",
 		tokens = {
 			{type = TokenType.TWord, text = "0"},
-			{type = TokenType.TWord, text = "1"},
-			{type = TokenType.TWord, text = "2"},
-			{type = TokenType.TWord, text = "3"},
-			{type = TokenType.TWord, text = "4"},
-		},
-	},
-	{
-		input = "><|&;",
-		tokens = {
-			{type = TokenType.TGreat, text = ">"},
-			{type = TokenType.TLess, text = "<"},
-			{type = TokenType.TOr, text = "|"},
 			{type = TokenType.TAnd, text = "&"},
+			{type = TokenType.TOr, text = "|"},
 			{type = TokenType.TSemi, text = ";"},
-		},
-	},
-	{
-		input = "&&||;;",
-		tokens = {
+			{type = TokenType.TLess, text = "<"},
+			{type = TokenType.TGreat, text = ">"},
 			{type = TokenType.TAndIf, text = "&&"},
 			{type = TokenType.TOrIf, text = "||"},
 			{type = TokenType.TDSemi, text = ";;"},
-		},
-	},
-	{
-		input = "<<<<&<&<<<><<-<",
-		tokens = {
 			{type = TokenType.TDLess, text = "<<"},
-			{type = TokenType.TDLess, text = "<<"},
-			{type = TokenType.TAnd, text = "&"},
+			{type = TokenType.TDGreat, text = ">>"},
 			{type = TokenType.TLessAnd, text = "<&"},
-			{type = TokenType.TDLess, text = "<<"},
+			{type = TokenType.TGreatAnd, text = ">&"},
 			{type = TokenType.TLessGreat, text = "<>"},
 			{type = TokenType.TDLessDash, text = "<<-"},
-			{type = TokenType.TLess, text = "<"},
-		},
-	},
-	{
-		input = ">>>>&>&>>>|",
-		tokens = {
-			{type = TokenType.TDGreat, text = ">>"},
-			{type = TokenType.TDGreat, text = ">>"},
-			{type = TokenType.TAnd, text = "&"},
-			{type = TokenType.TGreatAnd, text = ">&"},
-			{type = TokenType.TDGreat, text = ">>"},
 			{type = TokenType.TLobber, text = ">|"},
 		},
 	},
 	{
-		input = "1<&2",
-		tokens = {
-			{type = TokenType.TIONumber, text = "1"},
-			{type = TokenType.TLessAnd, text = "<&"},
-			{type = TokenType.TIONumber, text = "2"},
-		},
-	},
-	{
-		input = "1&2",
-		tokens = {
-			{type = TokenType.TWord, text = "1"},
-			{type = TokenType.TAnd, text = "&"},
-			{type = TokenType.TWord, text = "2"},
-		},
-	},
-	{
-		input = "12345678901234567890<&12345678901234567890",
-		tokens = {
-			{type = TokenType.TIONumber, text = "12345678901234567890"},
-			{type = TokenType.TLessAnd, text = "<&"},
-			{type = TokenType.TIONumber, text = "12345678901234567890"},
-		},
-	},
-	{
-		input = "12345678901234567890&12345678901234567890",
-		tokens = {
-			{type = TokenType.TWord, text = "12345678901234567890"},
-			{type = TokenType.TAnd, text = "&"},
-			{type = TokenType.TWord, text = "12345678901234567890"},
-		},
-	},
-	{
-		input = "if 78 then h23 else elif fi do done case esac while until for",
+		input = "if then else elif fi do done case esac while until",
 		tokens = {
 			{type = TokenType.TIf, text = "if"},
-			{type = TokenType.TWord, text = "78"},
 			{type = TokenType.TThen, text = "then"},
-			{type = TokenType.TWord, text = "h23"},
 			{type = TokenType.TElse, text = "else"},
 			{type = TokenType.TElif, text = "elif"},
 			{type = TokenType.TFi, text = "fi"},
@@ -313,14 +288,13 @@ local mtests = {
 			{type = TokenType.TEsac, text = "esac"},
 			{type = TokenType.TWhile, text = "while"},
 			{type = TokenType.TUntil, text = "until"},
-			{type = TokenType.TFor, text = "for"},
 		},
 	},
 }
 
-print '\tlexer test: multiple tokens'
+print '\tlexer test:'
 lex.lex_make()
-for k, tt in pairs(mtests) do
+for k, tt in pairs(tests) do
 	lex.lex_readfrom(tt.input)
 
 	for _, want in pairs(tt.tokens) do
