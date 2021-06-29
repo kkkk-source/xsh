@@ -83,6 +83,9 @@ TokenType = {
 	TWhile = 28,
 	TUntil = 29,
 	TFor = 30,
+	TLBrace = 31,
+	TRBrace = 32,
+	TBang = 33,
 }
 
 local tests = {
@@ -111,8 +114,11 @@ local tests = {
 	{input = "done", tokens = {{type = TokenType.TDone, text = "done"}}},
 	{input = "case", tokens = {{type = TokenType.TCase, text = "case"}}},
 	{input = "esac", tokens = {{type = TokenType.TEsac, text = "esac"}}},
-	{input = "while", tokens = {{type = TokenType.TWhile, text = "while"}}},
 	{input = "until", tokens = {{type = TokenType.TUntil, text = "until"}}},
+	{input = "while", tokens = {{type = TokenType.TWhile, text = "while"}}},
+	{input = "{", tokens = {{type = TokenType.TLBrace, text = "{"}}},
+	{input = "}", tokens = {{type = TokenType.TRBrace, text = "}"}}},
+	{input = "!", tokens = {{type = TokenType.TBang, text = "!"}}},
 	{input = "ift", tokens = {{type = TokenType.TWord, text = "ift"}}},
 	{input = "thent", tokens = {{type = TokenType.TWord, text = "thent"}}},
 	{input = "elset", tokens = {{type = TokenType.TWord, text = "elset"}}},
@@ -253,43 +259,6 @@ local tests = {
 		{type = TokenType.TLessGreat, text = "<>"},
 		{type = TokenType.TWord, text = "15"}}
 	},
-	{
-		input = "0 & | ; < > && || ;; << >> <& >& <> <<- >|",
-		tokens = {
-			{type = TokenType.TWord, text = "0"},
-			{type = TokenType.TAnd, text = "&"},
-			{type = TokenType.TOr, text = "|"},
-			{type = TokenType.TSemi, text = ";"},
-			{type = TokenType.TLess, text = "<"},
-			{type = TokenType.TGreat, text = ">"},
-			{type = TokenType.TAndIf, text = "&&"},
-			{type = TokenType.TOrIf, text = "||"},
-			{type = TokenType.TDSemi, text = ";;"},
-			{type = TokenType.TDLess, text = "<<"},
-			{type = TokenType.TDGreat, text = ">>"},
-			{type = TokenType.TLessAnd, text = "<&"},
-			{type = TokenType.TGreatAnd, text = ">&"},
-			{type = TokenType.TLessGreat, text = "<>"},
-			{type = TokenType.TDLessDash, text = "<<-"},
-			{type = TokenType.TLobber, text = ">|"},
-		},
-	},
-	{
-		input = "if then else elif fi do done case esac while until",
-		tokens = {
-			{type = TokenType.TIf, text = "if"},
-			{type = TokenType.TThen, text = "then"},
-			{type = TokenType.TElse, text = "else"},
-			{type = TokenType.TElif, text = "elif"},
-			{type = TokenType.TFi, text = "fi"},
-			{type = TokenType.TDo, text = "do"},
-			{type = TokenType.TDone, text = "done"},
-			{type = TokenType.TCase, text = "case"},
-			{type = TokenType.TEsac, text = "esac"},
-			{type = TokenType.TWhile, text = "while"},
-			{type = TokenType.TUntil, text = "until"},
-		},
-	},
 }
 
 print '\tlexer test:'
@@ -301,11 +270,13 @@ for k, tt in pairs(tests) do
 		local got = lex.lex_next()
 
 		if got.type ~= want.type then
+			print('\tinput: ' .. tt.input)
 			print(string.format("\ttoken.type test at k=%d: got=%s, \z
 				want=%s", k, got.type, want.type))
 		end
 
 		if ffi.string(got.text) ~= want.text then
+			print('\tinput: ' .. tt.input)
 			print(string.format("\ttoken.text test at k=%d: got=%s, \z
 				want=%s", k, ffi.string(got.text), want.text))
 		end
