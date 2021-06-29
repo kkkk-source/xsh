@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include "lex.h"
 
-#define LENGTH 12
+#define LENGTH 15
 
 static char *keywords[LENGTH] = {
     "if",
@@ -16,6 +16,9 @@ static char *keywords[LENGTH] = {
     "until",
     "while",
     "for",
+    "{",
+    "}",
+    "!",
 };
 
 static int keywordtypes[LENGTH] = {
@@ -31,6 +34,9 @@ static int keywordtypes[LENGTH] = {
     TUntil,
     TWhile,
     TFor,
+    TLBrace,
+    TRBrace,
+    TBang,
 };
 
 TokenType keyw_gettype(const char *);
@@ -48,19 +54,21 @@ TokenType keyw_typeof(const char *keyword)
 	    return keywordtypes[i];
 	}
     }
+
     return TWord;
 }
 
 // streq checks whether s1 and s2 are equal.
 static bool streq(const char *s1, const char *s2)
 {
-    while (*s1) {
+    while (*s1 == *s2) {
+	if (!*s1 || !*s2) {
+	    break;
+	}
+
 	s1++;
 	s2++;
-
-	if (*s1 != *s2) {
-	    return false;
-	}
     }
-    return true;
+
+    return *s1 == *s2;
 }
