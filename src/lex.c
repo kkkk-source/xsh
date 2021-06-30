@@ -85,12 +85,6 @@ static Token *emit(TokenType type)
     Token *t = malloc(sizeof(Token));
     t->type = type;
 
-    if (type == TNewLine) {
-	l->stt = l->pos;
-	t->text = "\\n";
-	return t;
-    }
-
     if (type == TEOF) {
 	l->stt = l->pos;
 	t->text = "eof";
@@ -130,6 +124,7 @@ Token *lex_next(void)
 	case '>':
 	    return lex_great();
 
+	    // These are all of the possible characters a keyword can start with.
 	case 'i':
 	case 't':
 	case 'e':
@@ -173,6 +168,14 @@ Token *lex_next(void)
     }
 }
 
+// lex_keyword scans:  TIf      TThen    TElse    TElif    TFi   TDo   TDone.
+//                     'if'     'then'   'else'   'elif'   'fi'  'do'  'done'
+//
+//                     TCase    TEsac    TWhile   TUntil   TFor
+//                     'case'   'esac'   'while'  'until'  'for'
+//
+//                     TLBrace  TRBrace  TBang
+//                     '{'      '}'      '!'
 static Token *lex_keyword(void)
 {
     for (;;) {
@@ -180,19 +183,14 @@ static Token *lex_keyword(void)
 
 	default:
 	    next();
+
+	    // If calling peek() doesn't give a character of the set of the 
+	    // character that a keyword can have in it or a space character,
+	    // continue processing the token as a TWord.
 	    return lex_word();
 
-	case ' ':
-	case '\t':
-	case '\v':
-	case '\f':
-	case '\r':
-	case '\n':
-	case '\0':
-	    Token * t = emit(TWord);
-	    t->type = keyw_typeof(t->text);
-	    return t;
-
+	    // These are all of the possible characters that 
+	    // no-a-single-character keyword can have in it.
 	case 'a':
 	case 'c':
 	case 'd':
@@ -210,10 +208,27 @@ static Token *lex_keyword(void)
 	case 'w':
 	    next();
 	    break;
+
+	case ' ':
+	case '\t':
+	case '\v':
+	case '\f':
+	case '\r':
+	case '\n':
+	case '\0':
+	    Token * t = emit(TWord);
+
+	    // At this point, we have a t->text which has only characters 
+	    // of the set of characters that a keyword can have in it. We
+	    // have to make sure it is a keyword, otherwise, it is a Word.
+	    t->type = keyw_typeof(t->text);
+	    return t;
 	}
     }
 }
 
+
+// lex_word scans any TWord.
 static Token *lex_word(void)
 {
     for (;;) {
@@ -223,6 +238,7 @@ static Token *lex_word(void)
 	    next();
 	    break;
 
+	    // Stop scanning when any of these delimiters is found.
 	case ' ':
 	case '\t':
 	case '\v':
@@ -235,37 +251,47 @@ static Token *lex_word(void)
     }
 }
 
+// lex_and scans: TAnd  TAndIf.
+//                 '&'  '&&'
 static Token *lex_and(void)
 {
+    // &&
     if (peek() == '&') {
 	next();
 	return emit(TAndIf);
     }
-
+    // &
     return emit(TAnd);
 }
 
+// lex_or scans: TOr  TOrIf.
+//                 '|'  '||'
 static Token *lex_or(void)
 {
+    // ||
     if (peek() == '|') {
 	next();
 	return emit(TOrIf);
     }
-
+    // |
     return emit(TOr);
 }
 
+// lex_semi scans: TSemi  TDSemi.
+//                 ';'    ';;'
 static Token *lex_semi(void)
 {
+    // ;;
     if (peek() == ';') {
 	next();
 	return emit(TDSemi);
     }
-
+    // ;
     return emit(TSemi);
 }
 
-// lex_number scans an integer positive number: Tword  TIONumber.
+// lex_number scans an integer positive number that could be Tword or
+// TIONumber.
 static Token *lex_number(void)
 {
     Token *t;
@@ -284,7 +310,7 @@ static Token *lex_number(void)
 	    //                            |       |
 	    //                           stt     pos
 	    //
-	    // But we still don't know what type of tokin is it. It could be TWord or
+	    // But we still don't know what type of tokin it is. It could be TWord or
 	    // TIONumber. Consequently, we don't return inmediatly the token; the analysis
 	    // continues.
 	    goto Loop;
@@ -308,9 +334,11 @@ static Token *lex_number(void)
     // Consume all spaces.
     lex_space();
 
-    // If the next character in input is '<' or '>', the current token is a
-    // TIONumber.
     char c = peek();
+
+    // If the next character in input is  a '<' or '>', the next token
+    // could be: "<", ">", "<<", ">>", "<&", ">&", "<>", "<<-", or ">|".
+    // Hence, the current token is a TIONumber.
     if (c == '<' || c == '>') {
 	t->type = TIONumber;
     }
@@ -318,8 +346,8 @@ static Token *lex_number(void)
     return t;
 }
 
-// lex_less scans:  TLess  TDLess TLessAnd TDLessDash  TLessGreat.
-//                 '<'    '<<'   '<&'     '<<-'       '<>'
+// lex_less scans:  TLess  TDLess  TLessAnd  TDLessDash  TLessGreat.
+//                  '<'    '<<'    '<&'      '<<-'       '<>'
 static Token *lex_less(void)
 {
     switch (peek()) {
@@ -331,11 +359,12 @@ static Token *lex_less(void)
 	// << or <<-
     case '<':
 	next();
+	// <<-
 	if (peek() == '-') {
 	    next();
 	    return emit(TDLessDash);
 	}
-
+	// <<
 	return emit(TDLess);
 
 	// <&
@@ -377,7 +406,7 @@ static Token *lex_great(void)
     }
 }
 
-// lex_space consumes the space characteres.
+// lex_space consumes the space characters.
 static void lex_space(void)
 {
     for (;;) {
@@ -387,6 +416,7 @@ static void lex_space(void)
 	    ignore();
 	    return;
 
+	    // These are space characters.
 	case ' ':
 	case '\t':
 	case '\v':
@@ -394,6 +424,7 @@ static void lex_space(void)
 	case '\r':
 	case '\n':
 	    next();
+	    break;
 	}
     }
 }
