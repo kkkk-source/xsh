@@ -46,6 +46,8 @@ typedef enum {
     TLBrace,			// {
     TRBrace,			// }
     TBang,			// !
+
+    TIn,			// in
 } TokenType;
 
 // Lex holds the state of the lexer.
@@ -78,13 +80,21 @@ typedef struct __sLex {
 
 } Lex;
 
-// Token represents a token or text string returned from the lexer.
+// Token represents a token returned from the lexer.
 typedef struct __sToken {
 
-    // String representation of the token.
+    // text is the string representation of the current token.  text is getting
+    // by extracting the substring in between of Lex->stt and Lex->pos:
+    //
+    // Lex->input = [ x | f | o | r | x | x | x | \0 ]
+    //                    ^           ^
+    //                    |           |
+    //                   stt         pos
+    // gives: 'for'
+    //
     char *text;
 
-    // Type of the current token.
+    // type is the token type of the current token.
     TokenType type;
 
 } Token;
