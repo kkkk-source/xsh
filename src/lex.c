@@ -31,6 +31,22 @@ static void lex_space(void);
 
 static Lex *l;
 
+// seen is used to keep track of the last seen three token types. seen is
+// useful to determine when the text 'in' is a TIn or TWord. If the current
+// text is 'in' and the third last seen token type was a TFor or TCase, then
+// the token type of 'in' is TIn. Otherwise, it's TWord.
+//
+//  for    in     in   in
+//  ^      ^      ^    ^
+//  |      |      |    |
+//  TFor   TWord  TIn  TWord
+//
+//  case   in     in   in
+//  ^      ^      ^    ^
+//  |      |      |    |
+//  TCase  TWord  TIn  TWord
+static TokenType seen[3];
+
 // lex_make allocates and returns a Lex struct. Its field are just read-only,
 // make sure not setting any of its fields.  lex_make has to be called before
 // using the rest of public functions listen in "lex.h".
@@ -82,14 +98,14 @@ static void ignore(void)
 // emit returns a token back to the caller.
 static Token *emit(TokenType type)
 {
+    // Update the three last seen token types.
+    seen[2] = seen[1];
+    seen[1] = seen[0];
+    seen[0] = type;
+
+    // Prepare the current token.
     Token *t = malloc(sizeof(Token));
     t->type = type;
-
-    if (type == TEOF) {
-	l->stt = l->pos;
-	t->text = "eof";
-	return t;
-    }
 
     int n = l->pos - l->stt;
     t->text = malloc(sizeof(char) * (n + 1));
@@ -182,7 +198,6 @@ static Token *lex_keyword(void)
 	switch (peek()) {
 
 	default:
-	    next();
 
 	    // If calling peek() doesn't give a character of the set of the 
 	    // character that a keyword can have in it or a space character,
@@ -221,7 +236,17 @@ static Token *lex_keyword(void)
 	    // At this point, we have a t->text which has only characters 
 	    // of the set of characters that a keyword can have in it. We
 	    // have to make sure it is a keyword, otherwise, it is a Word.
-	    t->type = keyw_typeof(t->text);
+	    TokenType type = keyw_typeof(t->text);
+
+	    // The type of a 'in' token is a TIn if and only if the third last
+	    // token type is TFor or TCase.
+	    if (type == TIn && seen[2] != TFor && seen[2] != TCase) {
+		type = TWord;
+	    }
+
+	    // Update the current seen token type.
+	    seen[0] = type;
+	    t->type = type;
 	    return t;
 	}
     }
@@ -246,13 +271,15 @@ static Token *lex_word(void)
 	case '\r':
 	case '\n':
 	case '\0':
+	case '<':
+	case '>':
 	    return emit(TWord);
 	}
     }
 }
 
 // lex_and scans: TAnd  TAndIf.
-//                 '&'  '&&'
+//                '&'   '&&'
 static Token *lex_and(void)
 {
     // &&
@@ -265,7 +292,7 @@ static Token *lex_and(void)
 }
 
 // lex_or scans: TOr  TOrIf.
-//                 '|'  '||'
+//               '|'  '||'
 static Token *lex_or(void)
 {
     // ||
