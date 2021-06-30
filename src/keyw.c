@@ -1,7 +1,7 @@
 #include <stdbool.h>
 #include "lex.h"
 
-#define LENGTH 15
+#define LENGTH 16
 
 static char *keywords[LENGTH] = {
     "if",
@@ -19,6 +19,7 @@ static char *keywords[LENGTH] = {
     "{",
     "}",
     "!",
+    "in",
 };
 
 static int keywordtypes[LENGTH] = {
@@ -37,6 +38,7 @@ static int keywordtypes[LENGTH] = {
     TLBrace,
     TRBrace,
     TBang,
+    TIn,
 };
 
 TokenType keyw_gettype(const char *);
