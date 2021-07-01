@@ -31,22 +31,6 @@ static void lex_space(void);
 
 static Lex *l;
 
-// seen is used to keep track of the last seen three token types. seen is
-// useful to determine when the text 'in' is a TIn or TWord. If the current
-// text is 'in' and the third last seen token type was a TFor or TCase, then
-// the token type of 'in' is TIn. Otherwise, it's TWord.
-//
-//  for    in     in   in
-//  ^      ^      ^    ^
-//  |      |      |    |
-//  TFor   TWord  TIn  TWord
-//
-//  case   in     in   in
-//  ^      ^      ^    ^
-//  |      |      |    |
-//  TCase  TWord  TIn  TWord
-static TokenType seen[3];
-
 // lex_make allocates and returns a Lex struct. Its field are just read-only,
 // make sure not setting any of its fields.  lex_make has to be called before
 // using the rest of public functions listen in "lex.h".
@@ -59,29 +43,29 @@ Lex *lex_make(void)
     return l;
 }
 
-// lex_readfrom sets Lex->input to point to the new input provided by the
+// lex_readfrom sets Lex->buf to point to the provided input by the
 // caller and reset Lex->pos, Lex->stt, and Lex->done to its zero values.
 void lex_readfrom(const char *input)
 {
-    l->input = input;
+    l->buf = input;
     l->pos = 0;
     l->stt = 0;
     l->done = false;
 }
 
-// next returns the next character in the input.
+// next returns the next character in the buf.
 static char next(void)
 {
-    if (!l->input[l->pos]) {
+    if (!l->buf[l->pos]) {
 	l->done = true;
     }
 
-    char c = l->input[l->pos];
+    char c = l->buf[l->pos];
     l->pos++;
     return c;
 }
 
-// peek returns but does not consume the next character in the input.
+// peek returns but does not consume the next character in the buf.
 static char peek(void)
 {
     char c = next();
@@ -89,7 +73,7 @@ static char peek(void)
     return c;
 }
 
-// ignore skips over the pending input before this point.
+// ignore skips over the pending buf before this point.
 static void ignore(void)
 {
     l->stt = l->pos;
@@ -99,9 +83,9 @@ static void ignore(void)
 static Token *emit(TokenType type)
 {
     // Update the three last seen token types.
-    seen[2] = seen[1];
-    seen[1] = seen[0];
-    seen[0] = type;
+    l->seen[2] = l->seen[1];
+    l->seen[1] = l->seen[0];
+    l->seen[0] = type;
 
     // Prepare the current token.
     Token *t = malloc(sizeof(Token));
@@ -111,12 +95,12 @@ static Token *emit(TokenType type)
     t->text = malloc(sizeof(char) * (n + 1));
     t->text[n] = '\0';
 
-    strncpy(t->text, l->input + l->stt, n);
+    strncpy(t->text, l->buf + l->stt, n);
     l->stt = l->pos;
     return t;
 }
 
-// lex_next returns the next token available in input.
+// lex_next returns the next token available in buf.
 Token *lex_next(void)
 {
     for (;;) {
@@ -178,7 +162,7 @@ Token *lex_next(void)
 	case '\0':
 
 	    // The null-terminated character has already been reached from the
-	    // input, which means, there is no more input to read from.
+	    // buf, which means, there is no more buf to read from.
 	    return emit(TEOF);
 	}
     }
@@ -238,14 +222,13 @@ static Token *lex_keyword(void)
 	    // have to make sure it is a keyword, otherwise, it is a Word.
 	    TokenType type = keyw_typeof(t->text);
 
-	    // The type of a 'in' token is a TIn if and only if the third last
-	    // token type is TFor or TCase.
-	    if (type == TIn && seen[2] != TFor && seen[2] != TCase) {
+	    // The type of a 'in' token is a TIn if and only if the third 
+	    // last token type is TFor or TCase.
+	    if (type == TIn && l->seen[2] != TFor && l->seen[2] != TCase) {
 		type = TWord;
 	    }
-
 	    // Update the current seen token type.
-	    seen[0] = type;
+	    l->seen[0] = type;
 	    t->type = type;
 	    return t;
 	}
@@ -330,9 +313,9 @@ static Token *lex_number(void)
 	    t = emit(TWord);
 
 	    // At this point Lex->stt and Lex->pos are pointing at the start and
-	    // at the end of the current positive integer in the input line:
+	    // at the end of the current positive integer in the buf line:
 	    //
-	    // Lex->input = [ x | x | x | 1 | 2 | x | x | \0 ]
+	    // Lex->buf = [ x | x | x | 1 | 2 | x | x | \0 ]
 	    //                            ^       ^
 	    //                            |       |
 	    //                           stt     pos
@@ -363,7 +346,7 @@ static Token *lex_number(void)
 
     char c = peek();
 
-    // If the next character in input is  a '<' or '>', the next token
+    // If the next character in buf is  a '<' or '>', the next token
     // could be: "<", ">", "<<", ">>", "<&", ">&", "<>", "<<-", or ">|".
     // Hence, the current token is a TIONumber.
     if (c == '<' || c == '>') {

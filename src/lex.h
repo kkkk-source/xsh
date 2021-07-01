@@ -53,19 +53,19 @@ typedef enum {
 // Lex holds the state of the lexer.
 typedef struct __sLex {
 
-    // input is the read-only current line under examination.
-    const char *input;
+    // buf is used to store the current input string under examination. 
+    const char *buf;
 
-    // Lex->input = [ x | x | x | x | x | x | x | \0 ]
+    // Lex->buf = [ x | x | x | x | x | x | x | \0 ]
     //                                    ^
     //                                    |
     //                                   pos
     //
-    // pos is the position in the input of the current character under
+    // pos is the position in the buf of the current character under
     // examination.
     int pos;
 
-    // Lex->input = [ x | x | x | x | x | x | x | \0 ]
+    // Lex->buf = [ x | x | x | x | x | x | x | \0 ]
     //                    ^           ^
     //                    |           |
     //                   stt         pos
@@ -74,7 +74,23 @@ typedef struct __sLex {
     // substring is supposed to be the text value of the field of a token. 
     int stt;
 
-    // done is set to true if there is no more characters in the input to
+    // seen is used to keep track of the last seen three token types. seen is
+    // useful to determine when the text 'in' is a TIn or TWord. If the current
+    // text is 'in' and the third last seen token type was a TFor or TCase, then
+    // the token type of 'in' is TIn. Otherwise, it's TWord.
+    //
+    //  for    in     in   in
+    //  ^      ^      ^    ^
+    //  |      |      |    |
+    //  TFor   TWord  TIn  TWord
+    //
+    //  case   in     in   in
+    //  ^      ^      ^    ^
+    //  |      |      |    |
+    //  TCase  TWord  TIn  TWord
+    TokenType seen[3];
+
+    // done is set to true if there is no more characters in the buf to
     // read from. It is just set to false when lex_readfrom() get called.
     bool done;
 
@@ -86,7 +102,7 @@ typedef struct __sToken {
     // text is the string representation of the current token.  text is getting
     // by extracting the substring in between of Lex->stt and Lex->pos:
     //
-    // Lex->input = [ x | f | o | r | x | x | x | \0 ]
+    // Lex->buf = [ x | f | o | r | x | x | x | \0 ]
     //                    ^           ^
     //                    |           |
     //                   stt         pos
