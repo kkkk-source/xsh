@@ -25,6 +25,7 @@ static Token *lex_or(void);
 static Token *lex_semi(void);
 static Token *lex_less(void);
 static Token *lex_great(void);
+static void lex_comment(void);
 static void lex_space(void);
 
 // ---------------------------------------------------------------------------
@@ -153,6 +154,14 @@ Token *lex_next(void)
 	case '9':
 	    return lex_number();
 
+	case '#':
+
+	    // If the current character is a '#', it and all subsequent 
+	    // characters up to, but excluding, the next newline shall
+	    // be discarded as a comment.
+	    lex_comment();
+	    break;
+
 	case ' ':
 	case '\t':
 	case '\v':
@@ -227,7 +236,15 @@ static Token *lex_keyword(void)
 
 	    // The type of a 'in' token is a TIn if and only if the third 
 	    // last token type is TFor or TCase.
-	    if (type == TIn && l->seen[2] != TFor && l->seen[2] != TCase) {
+	    TokenType _3seen = l->seen[2];
+	    if (type == TIn && _3seen != TFor && _3seen != TCase) {
+		type = TWord;
+	    }
+	    // The recognition of a keyword shall occur as well when the
+	    // word is the first word following one of the reserved
+	    // words other than TCase, TFor, or TIn.
+	    TokenType _2seen = l->seen[1];
+	    if (_2seen == TFor || _2seen == TCase || _2seen == TIn) {
 		type = TWord;
 	    }
 	    // Update the current seen token type.
@@ -259,6 +276,7 @@ static Token *lex_word(void)
 	case '\0':
 	case '<':
 	case '>':
+	case '#':
 	    return emit(TWord);
 	}
     }
@@ -416,6 +434,25 @@ static Token *lex_great(void)
     case '|':
 	next();
 	return emit(TLobber);
+    }
+}
+
+// lex_comment ignores the characters that are part of a comment, excluding the
+// newline character.
+static void lex_comment(void)
+{
+    for (;;) {
+	switch (peek()) {
+
+	default:
+	    next();
+	    break;
+
+	    // The newline that ends the line is not considered part of the comment.
+	case '\n':
+	    ignore();
+	    return;
+	}
     }
 }
 
