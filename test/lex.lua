@@ -128,35 +128,35 @@ local tests = {
 	{
 		input = [[
 		for word in word word word
-		do
-		word
-		word
-		done
+		do   # ignore this
+		word # ignore this
+		word # ignore this
+		done # ignore this
 		case word in
-		;;
-		;;
-		esac
+		;;   # ignore this
+		;;   # ignore this
+		esac # ignore this
 		while word in
-		do
-		word
-		word
-		done
+		do   # ignore this
+		word # ignore this
+		word # ignore this
+		done # ignore this
 		until word in
-		do
-		word
-		word
-		done
+		do   # ignore this
+		word # ignore this
+		word # ignore this
+		done # ignore this
 		if word in
-		then
-		word
-		word
-		elif
-		word
-		word
-		else
-		word
-		word
-		fi
+		then #ignore this
+		word #ignore this
+		word #ignore this
+		elif #ignore this
+		word #ignore this
+		word #ignore this
+		else #ignore this
+		word #ignore this
+		word #ignore this
+		fi   #ignore this
 		]], 
 		tokens = {
 			{type = TokenType.TFor, text = "for"},
@@ -205,24 +205,24 @@ local tests = {
 		}},
 	{
 		input = [[
-		word word<word
-		word word>word
-		word word<<word
-		word word>>word
-		word word<&word
-		word word>&word
-		word word<>word
-		word word<<-word
-		word word>|word
-		word 1<2
-		word 1>2
-		word 1<<2
-		word 1>>2
-		word 1<&2
-		word 1>&2
-		word 1<>2
-		word 1<<-2
-		word 1>|2
+		word word<word#ignore this
+		word word>word#ignore this
+		word word<<word#ignore this
+		word word>>word#ignore this
+		word word<&word#ignore this
+		word word>&word#ignore this
+		word word<>word#ignore this
+		word word<<-word#ignore this
+		word word>|word#ignore this
+		word 1<2#ignore this
+		word 1>2#ignore this
+		word 1<<2#ignore this
+		word 1>>2#ignore this
+		word 1<&2#ignore this
+		word 1>&2#ignore this
+		word 1<>2#ignore this
+		word 1<<-2#ignore this
+		word 1>|2#ignore this
 		]],
 		tokens = {
 			{type = TokenType.TWord, text = "word"},
@@ -334,7 +334,7 @@ local tests = {
 			{type = TokenType.TLessGreat, text = "<>"},
 			{type = TokenType.TLessGreat, text = "<>"},
 		}
-	}
+	},
 }
 
 print '\tlexer test:'
