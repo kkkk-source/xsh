@@ -7,46 +7,46 @@ typedef struct __sFILE FILE;
 typedef struct __sLex Lex;
 
 typedef enum {
-    TEOF,       // End of file
-    TWord,      // any
-    TIONumber,  // Integer positive number delimited by '<' or '>'
-    TNewLine,   // \n
-    TAnd,       // &
-    TOr,        // |
-    TSemi,      // ;
-    TAndIf,     // &&
-    TOrIf,      // ||
-    TDSemi,     // ;;
-    TLess,      // <
-    TGreat,     // >
-    TDLess,     // <<
-    TDGreat,    // >>
-    TLessAnd,   // <&
-    TGreatAnd,  // >&
-    TLessGreat, // <>
-    TDLessDash, // <<-
-    TLobber,    // >|
-    TIf,        // if
-    TThen,      // then
-    TElse,      // else
-    TElif,      // elif
-    TFi,        // fi
-    TDo,        // do
-    TDone,      // done
-    TCase,      // case
-    TEsac,      // esac
-    TWhile,     // while
-    TUntil,     // until
-    TFor,       // for
-    TLBrace,    // {
-    TRBrace,    // }
-    TBang,      // !
-    TIn,        // in
+	TEOF,       // End of file
+	TWord,      // any
+	TIONumber,  // Integer positive number delimited by '<' or '>'
+	TNewLine,   // \n
+	TAnd,       // &
+	TOr,        // |
+	TSemi,      // ;
+	TAndIf,     // &&
+	TOrIf,      // ||
+	TDSemi,     // ;;
+	TLess,      // <
+	TGreat,     // >
+	TDLess,     // <<
+	TDGreat,    // >>
+	TLessAnd,   // <&
+	TGreatAnd,  // >&
+	TLessGreat, // <>
+	TDLessDash, // <<-
+	TLobber,    // >|
+	TIf,        // if
+	TThen,      // then
+	TElse,      // else
+	TElif,      // elif
+	TFi,        // fi
+	TDo,        // do
+	TDone,      // done
+	TCase,      // case
+	TEsac,      // esac
+	TWhile,     // while
+	TUntil,     // until
+	TFor,       // for
+	TLBrace,    // {
+	TRBrace,    // }
+	TBang,      // !
+	TIn,        // in
 } TokenType;
 
 typedef struct __sToken {
-    char * text;
-    TokenType   type;
+	char * text;
+	TokenType   type;
 } Token;
 
 Lex * lex_make(void);
@@ -129,37 +129,33 @@ local tests = {
 		input = [[
 		for word in word word word
 		do
-			word
-			word
+		word
+		word
 		done
-
 		case word in
-			;;
-			;;
+		;;
+		;;
 		esac
-
 		while word in
 		do
-			word
-			word
+		word
+		word
 		done
-
 		until word in
 		do
-			word
-			word
+		word
+		word
 		done
-
 		if word in
 		then
-			word
-			word
+		word
+		word
 		elif
-			word
-			word
+		word
+		word
 		else
-			word
-			word
+		word
+		word
 		fi
 		]], 
 		tokens = {
