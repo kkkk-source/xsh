@@ -39,6 +39,9 @@ Lex *lex_make(void)
     l = malloc(sizeof(Lex));
     l->pos = 0;
     l->stt = 0;
+    l->seen[0] = TEOF;
+    l->seen[1] = TEOF;
+    l->seen[2] = TEOF;
     l->done = true;
     return l;
 }
