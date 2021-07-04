@@ -167,9 +167,11 @@ Token *lex_next(void)
 	case '\v':
 	case '\f':
 	case '\r':
-	case '\n':
 	    lex_space();
 	    break;
+
+	case '\n':
+	    return emit(TNewLine);
 
 	case '\0':
 
@@ -236,20 +238,17 @@ static Token *lex_keyword(void)
 
 	    // The type of a 'in' token is a TIn if and only if the third 
 	    // last token type is TFor or TCase.
-	    TokenType _3seen = l->seen[2];
-	    if (type == TIn && _3seen != TFor && _3seen != TCase) {
+	    TokenType third_seen = l->seen[2];
+	    if (type == TIn && third_seen != TFor && third_seen != TCase) {
 		type = TWord;
 	    }
-	    // The recognition of a keyword shall occur as well when the
-	    // word is the first word following one of the reserved
-	    // words other than TCase, TFor, or TIn.
-	    TokenType _2seen = l->seen[1];
-	    if (_2seen == TFor || _2seen == TCase || _2seen == TIn) {
-		type = TWord;
+	    // Update the current seen token type and the current 
+	    // Lex->seen token if type is a keyword.
+	    if (type != TWord) {
+		l->seen[0] = type;
+		t->type = type;
 	    }
-	    // Update the current seen token type.
-	    l->seen[0] = type;
-	    t->type = type;
+
 	    return t;
 	}
     }
@@ -325,13 +324,12 @@ static Token *lex_semi(void)
 // TIONumber.
 static Token *lex_number(void)
 {
-    Token *t;
     for (;;) {
 	switch (peek()) {
 
 	default:
 
-	    t = emit(TWord);
+	    Token * t = emit(TWord);
 
 	    // At this point Lex->stt and Lex->pos are pointing at the start and
 	    // at the end of the current positive integer in the buf line:
@@ -344,7 +342,19 @@ static Token *lex_number(void)
 	    // But we still don't know what type of tokin it is. It could be TWord or
 	    // TIONumber. Consequently, we don't return inmediatly the token; the analysis
 	    // continues.
-	    goto Loop;
+	    // Consume all spaces.
+	    lex_space();
+
+	    char c = peek();
+
+	    // If the next character in buf is  a '<' or '>', the next token
+	    // could be: "<", ">", "<<", ">>", "<&", ">&", "<>", "<<-", or ">|".
+	    // Hence, the current token is a TIONumber.
+	    if (c == '<' || c == '>') {
+		t->type = TIONumber;
+	    }
+
+	    return t;
 
 	case '0':
 	case '1':
@@ -360,21 +370,6 @@ static Token *lex_number(void)
 	    break;
 	}
     }
-  Loop:
-
-    // Consume all spaces.
-    lex_space();
-
-    char c = peek();
-
-    // If the next character in buf is  a '<' or '>', the next token
-    // could be: "<", ">", "<<", ">>", "<&", ">&", "<>", "<<-", or ">|".
-    // Hence, the current token is a TIONumber.
-    if (c == '<' || c == '>') {
-	t->type = TIONumber;
-    }
-
-    return t;
 }
 
 // lex_less scans:  TLess  TDLess  TLessAnd  TDLessDash  TLessGreat.
@@ -472,7 +467,6 @@ static void lex_space(void)
 	case '\v':
 	case '\f':
 	case '\r':
-	case '\n':
 	    next();
 	    break;
 	}
