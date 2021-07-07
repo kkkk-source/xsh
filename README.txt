@@ -1,8 +1,15 @@
+/* -------------------------------------------------------
+   The grammar symbols
+   ------------------------------------------------------- */
 %token  WORD
-%token  IO_NUMBER
+%token  ASSIGNMENT_WORD
+%token  NAME
 %token  NEWLINE
+%token  IO_NUMBER
 
-/* The following are the operators mentioned above. */
+
+/* The following are the operators (see XBD Operator)
+   containing more than one character. */
 
 %token  AND_IF    OR_IF    DSEMI
 /*      '&&'      '||'     ';;'    */
@@ -13,6 +20,23 @@
 %token  CLOBBER
 /*      '>|'   */
 
+/* The following are the reserved words. */
+
+%token  If    Then    Else    Elif    Fi    Do    Done
+/*      'if'  'then'  'else'  'elif'  'fi'  'do'  'done'   */
+
+%token  Case    Esac    While    Until    For
+/*      'case'  'esac'  'while'  'until'  'for'   */
+
+/* These are reserved words, not operator tokens, and are
+   recognized when reserved words are recognized. */
+
+%token  Lbrace    Rbrace    Bang
+/*      '{'       '}'       '!'   */
+
+%token  In
+/*      'in'   */
+
 /* -------------------------------------------------------
    The Grammar
    ------------------------------------------------------- */
@@ -22,6 +46,18 @@ program          : complete_command linebreak
                  ;
 complete_command : list separator_op
                  | list
+                 ;
+list             : list separator_op pipeline
+                 |                   pipeline
+                 ;
+separator_op     : '&'
+                 | ';'
+                 ;
+pipeline         :      pipe_sequence
+                 | Bang pipe_sequence
+                 ;
+pipe_sequence    :                             command
+                 | pipe_sequence '|' linebreak command
 
 command          : simple_command
                  | compound_command
