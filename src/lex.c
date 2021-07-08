@@ -30,42 +30,42 @@ static void lex_space(void);
 
 // ---------------------------------------------------------------------------
 
-static Lex *l;
+static Lex *lex;
 
 // lex_make allocates and returns a Lex struct. Its field are just read-only,
 // make sure not setting any of its fields.  lex_make has to be called before
 // using the rest of public functions listen in "lex.h".
 Lex *lex_make(void)
 {
-    l = malloc(sizeof(Lex));
-    l->pos = 0;
-    l->stt = 0;
-    l->seen[0] = TEOF;
-    l->seen[1] = TEOF;
-    l->seen[2] = TEOF;
-    l->done = true;
-    return l;
+    lex = malloc(sizeof(Lex));
+    lex->pos = 0;
+    lex->stt = 0;
+    lex->seen[0] = TEOF;
+    lex->seen[1] = TEOF;
+    lex->seen[2] = TEOF;
+    lex->done = true;
+    return lex;
 }
 
 // lex_readfrom sets Lex->buf to point to the provided input by the
 // caller and reset Lex->pos, Lex->stt, and Lex->done to its zero values.
 void lex_readfrom(const char *input)
 {
-    l->buf = input;
-    l->pos = 0;
-    l->stt = 0;
-    l->done = false;
+    lex->buf = input;
+    lex->pos = 0;
+    lex->stt = 0;
+    lex->done = false;
 }
 
 // next returns the next character in the buf.
 static char next(void)
 {
-    if (!l->buf[l->pos]) {
-	l->done = true;
+    if (!lex->buf[lex->pos]) {
+	lex->done = true;
     }
 
-    char c = l->buf[l->pos];
-    l->pos++;
+    char c = lex->buf[lex->pos];
+    lex->pos++;
     return c;
 }
 
@@ -73,35 +73,35 @@ static char next(void)
 static char peek(void)
 {
     char c = next();
-    l->pos--;
+    lex->pos--;
     return c;
 }
 
 // ignore skips over the pending buf before this point.
 static void ignore(void)
 {
-    l->stt = l->pos;
+    lex->stt = lex->pos;
 }
 
 // emit returns a token back to the caller.
 static Token *emit(TokenType type)
 {
     // Update the three last seen token types.
-    l->seen[2] = l->seen[1];
-    l->seen[1] = l->seen[0];
-    l->seen[0] = type;
+    lex->seen[2] = lex->seen[1];
+    lex->seen[1] = lex->seen[0];
+    lex->seen[0] = type;
 
     // Prepare the current token.
-    Token *t = malloc(sizeof(Token));
-    t->type = type;
+    Token *tok = malloc(sizeof(Token));
+    tok->type = type;
 
-    int n = l->pos - l->stt;
-    t->text = malloc(sizeof(char) * (n + 1));
-    t->text[n] = '\0';
+    int n_chars = lex->pos - lex->stt;
+    tok->text = malloc(sizeof(char) * (n_chars + 1));
+    tok->text[n_chars] = '\0';
 
-    strncpy(t->text, l->buf + l->stt, n);
-    l->stt = l->pos;
-    return t;
+    strncpy(tok->text, lex->buf + lex->stt, n_chars);
+    lex->stt = lex->pos;
+    return tok;
 }
 
 // lex_next returns the next token available in buf.
@@ -229,27 +229,27 @@ static Token *lex_keyword(void)
 	case '\r':
 	case '\n':
 	case '\0':
-	    Token * t = emit(TWord);
+	    Token * tok = emit(TWord);
 
 	    // At this point, we have a t->text which has only characters 
 	    // of the set of characters that a keyword can have in it. We
 	    // have to make sure it is a keyword, otherwise, it is a Word.
-	    TokenType type = keyw_typeof(t->text);
+	    TokenType type = keyw_typeof(tok->text);
 
 	    // The type of a 'in' token is a TIn if and only if the third 
 	    // last token type is TFor or TCase.
-	    TokenType third_seen = l->seen[2];
+	    TokenType third_seen = lex->seen[2];
 	    if (type == TIn && third_seen != TFor && third_seen != TCase) {
 		type = TWord;
 	    }
 	    // Update the current seen token type and the current 
 	    // Lex->seen token if type is a keyword.
 	    if (type != TWord) {
-		l->seen[0] = type;
-		t->type = type;
+		lex->seen[0] = type;
+		tok->type = type;
 	    }
 
-	    return t;
+	    return tok;
 	}
     }
 }
@@ -329,7 +329,7 @@ static Token *lex_number(void)
 
 	default:
 
-	    Token * t = emit(TWord);
+	    Token * tok = emit(TWord);
 
 	    // At this point Lex->stt and Lex->pos are pointing at the start and
 	    // at the end of the current positive integer in the buf line:
@@ -351,10 +351,10 @@ static Token *lex_number(void)
 	    // could be: "<", ">", "<<", ">>", "<&", ">&", "<>", "<<-", or ">|".
 	    // Hence, the current token is a TIONumber.
 	    if (c == '<' || c == '>') {
-		t->type = TIONumber;
+		tok->type = TIONumber;
 	    }
 
-	    return t;
+	    return tok;
 
 	case '0':
 	case '1':
