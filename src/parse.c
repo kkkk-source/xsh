@@ -24,6 +24,12 @@ static void parse_pipe_sequence_prime(void);
 static void parse_command(void);
 static void parse_simple_command(void);
 static void parse_cmd_name(void);
+static void parse_cmd_suffix(void);
+static void parse_cmd_suffix_prime(void);
+static void parse_io_redirect(void);
+static void parse_io_file(void);
+static void parse_filename(void);
+static void parse_io_here(void);
 static void parse_newline_list(void);
 static void parse_newline_list_prime(void);
 static void parse_linebreak(void);
@@ -125,7 +131,8 @@ static void parse_separator_op(void)
 	return;
     }
 
-    fprintf(stderr, "separator_op: error\n");
+    fprintf(stderr, "newline_list: error at col=%ld, got='%s'\n",
+	    parser->lah->col, parser->lah->text);
 }
 
 // pipeline              :      pipe_sequence
@@ -166,11 +173,187 @@ static void parse_command(void)
     parse_simple_command();
 }
 
-// simple_command        : cmd_name
+// simple_command        | cmd_name cmd_suffix
+//                       | cmd_name
 //                       ;
 static void parse_simple_command(void)
 {
-    parse_cmd_name();
+    if (expect(TWord)) {
+	parse_cmd_name();
+
+	switch (parser->lah->type) {
+
+	default:
+	    break;
+
+	case TIONumber:
+	case TLess:
+	case TLessAnd:
+	case TGreat:
+	case TGreatAnd:
+	case TDGreat:
+	case TLessGreat:
+	case TLobber:
+	case TDLess:
+	case TDLessDash:
+	    parse_cmd_suffix();
+	}
+
+	return;
+    }
+    fprintf(stderr, "simple_command: error at col=%ld, got='%s'\n",
+	    parser->lah->col, parser->lah->text);
+}
+
+// cmd_suffix            : io_redirect cmd_suffix_prime
+//                       | WORD        cmd_suffix_prime
+//                       ;
+static void parse_cmd_suffix(void)
+{
+    parse_io_redirect();
+    parse_cmd_suffix_prime();
+}
+
+// cmd_suffix_prime      : io_redirect cmd_suffix_prime
+//                       | WORD        cmd_suffix_prime
+//                       | /* eps */
+//                       ;
+static void parse_cmd_suffix_prime()
+{
+
+    switch (parser->lah->type) {
+
+    default:
+	break;
+
+    case TIONumber:
+    case TLess:
+    case TLessAnd:
+    case TGreat:
+    case TGreatAnd:
+    case TDGreat:
+    case TLessGreat:
+    case TLobber:
+    case TDLess:
+    case TDLessDash:
+	parse_io_redirect();
+	parse_cmd_suffix_prime();
+	return;
+    }
+
+    if (accept(TWord)) {
+	parse_cmd_suffix_prime();
+	return;
+    }
+}
+
+// io_redirect           :           io_file
+//                       | IO_NUMBER io_file
+//                       |           io_here
+//                       | IO_NUMBER io_here
+//                       ;
+static void parse_io_redirect()
+{
+    if (accept(TIONumber)) {
+	switch (parser->lah->type) {
+
+	default:
+	    break;
+
+	case TLess:
+	case TLessAnd:
+	case TGreat:
+	case TGreatAnd:
+	case TDGreat:
+	case TLessGreat:
+	case TLobber:
+	    parse_io_file();
+	    return;
+	}
+
+	if (expect(TDLess) || expect(TDLessDash)) {
+	    parse_io_here();
+	    return;
+	}
+
+	fprintf(stderr, "io_redirect: error\n");
+	return;
+    }
+
+    switch (parser->lah->type) {
+
+    default:
+	break;
+
+    case TLess:
+    case TLessAnd:
+    case TGreat:
+    case TGreatAnd:
+    case TDGreat:
+    case TLessGreat:
+    case TLobber:
+	parse_io_file();
+	return;
+    }
+
+    if (expect(TDLess) || expect(TDLessDash)) {
+	parse_io_here();
+	return;
+    }
+
+    fprintf(stderr, "io_redirect: error at col=%ld, got='%s'\n",
+	    parser->lah->col, parser->lah->text);
+}
+
+// io_file               : LESS      filename
+//                       | LESSAND   filename
+//                       | GREAT     filename
+//                       | GREATAND  filename
+//                       | DGREAT    filename
+//                       | LESSGREAT filename
+//                       | CLOBBER   filename
+//                       ;
+static void parse_io_file(void)
+{
+    switch (parser->lah->type) {
+
+    default:
+	fprintf(stderr, "io_file: error at col=%ld, got='%s'\n",
+		parser->lah->col, parser->lah->text);
+	return;
+
+    case TLess:
+    case TLessAnd:
+    case TGreat:
+    case TGreatAnd:
+    case TDGreat:
+    case TLessGreat:
+    case TLobber:
+	parse_filename();
+	return;
+    }
+}
+
+// filename              : WORD
+//                       ;
+static void parse_filename(void)
+{
+    if (!accept(TWord)) {
+	fprintf(stderr, "filename: error at col=%ld, got='%s'\n",
+		parser->lah->col, parser->lah->text);
+	return;
+    }
+}
+
+// io_here               : DLESS     here_end
+//                       | DLESSDASH here_end
+//                       ;
+static void parse_io_here(void)
+{
+    if (!accept(TDLess) || !accept(TDLessDash)) {
+	fprintf(stderr, "io_here: error at col=%ld, got='%s'\n",
+		parser->lah->col, parser->lah->text);
+    }
 }
 
 // cmd_name              : WORD
@@ -178,7 +361,8 @@ static void parse_simple_command(void)
 static void parse_cmd_name(void)
 {
     if (!accept(TWord)) {
-	fprintf(stderr, "simple_command: error\n");
+	fprintf(stderr, "newline_list: error at col=%ld, got='%s'\n",
+		parser->lah->col, parser->lah->text);
 	return;
     }
 }
@@ -192,7 +376,8 @@ static void parse_newline_list(void)
 	return;
     }
 
-    fprintf(stderr, "newline_list: error\n");
+    fprintf(stderr, "newline_list: error at col=%ld, got='%s'\n",
+	    parser->lah->col, parser->lah->text);
 }
 
 // newline_list_prime    : NEWLINE newline_list_prime
