@@ -63,7 +63,7 @@ typedef struct __sLex {
     //
     // pos is the position in the buf of the current character under
     // examination.
-    int pos;
+    size_t pos;
 
     // Lex->buf = [ x | x | x | x | x | x | x | \0 ]
     //                    ^           ^
@@ -72,22 +72,12 @@ typedef struct __sLex {
     //
     // stt is the start position of the substring under examination. This
     // substring is supposed to be the text value of the field of a token. 
-    int stt;
+    size_t stt;
 
     // seen is used to keep track of the last seen three token types. seen is
-    // useful to determine when the text 'in' is a TIn or TWord. If the current
-    // text is 'in' and the third last seen token type was a TFor or TCase, then
-    // the token type of 'in' is TIn. Otherwise, it's TWord.
-    //
-    //  for    in     in   in
-    //  ^      ^      ^    ^
-    //  |      |      |    |
-    //  TFor   TWord  TIn  TWord
-    //
-    //  case   in     in   in
-    //  ^      ^      ^    ^
-    //  |      |      |    |
-    //  TCase  TWord  TIn  TWord
+    // useful to determine whether the text 'in' is a TIn or TWord. If the
+    // current text is 'in' and the third last seen token type was a TFor
+    // or TCase, then the token type of 'in' is TIn. Otherwise, it's TWord.
     TokenType seen[3];
 
     // done is set to true if there is no more characters in the buf to
@@ -112,6 +102,8 @@ typedef struct __sToken {
 
     // type is the token type of the current token.
     TokenType type;
+
+    size_t col;
 
 } Token;
 

@@ -98,6 +98,7 @@ static Token *emit(TokenType type)
     int n_chars = lex->pos - lex->stt;
     tok->text = malloc(sizeof(char) * (n_chars + 1));
     tok->text[n_chars] = '\0';
+    tok->col = lex->stt + 1;
 
     strncpy(tok->text, lex->buf + lex->stt, n_chars);
     lex->stt = lex->pos;
